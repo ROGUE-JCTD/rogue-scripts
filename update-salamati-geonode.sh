@@ -1,3 +1,4 @@
+#!/bin/bash
 SALAMATI_DIR=temp-salamati
 GEONODE_VIRTUALENV_PATH=/var/lib/geonode-new
 GEONODE_STATIC_PATH=$GEONODE_VIRTUALENV_PATH/geonode/geonode/static
