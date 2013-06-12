@@ -1,0 +1,75 @@
+#!/bin/bash
+
+#include settings
+source settings
+
+printf "\n\n\t Creating virtualenv...\n\n";
+virtualenv $VIRTUAL_ENV;
+
+printf "\n\n\t Activating virtualenv...\n\n";
+cd $VIRTUAL_ENV;
+source bin/activate;
+
+# Pull down repos
+printf "\n\n\t Pulling down $GEONODE_REPO_URL -b $GEONODE_BRANCH...\n\n";
+git clone $GEONODE_REPO_URL -b $GEONODE_BRANCH;
+
+printf "\n\n\t Pulling down $GSCONFIG_REPO_URL -b $GSCONFIG_BRANCH...\n\n";
+git clone $GSCONFIG_REPO_URL -b $GSCONFIG_BRANCH;
+
+printf "\n\n\t Pulling down $DOWNSTREAM_PROJECT_URL -b $DOWNSTREAM_PROJECT_BRANCH...\n\n";
+git clone $DOWNSTREAM_PROJECT_URL -b $DOWNSTREAM_PROJECT_BRANCH;
+
+# Install GeoNode
+printf "\n\n\t Installing geonode dependencies: $GEONODE_DEPENDENCIES...\n\n";
+pip install uwsgi psycopg2;
+
+printf "\n\n\t Installing geonode...\n\n";
+pip install -e geonode --use-mirrors;
+
+printf "\n\n\t Installing gsconfig.py...\n\n";
+pip install -e gsconfig.py;
+
+printf "\n\n\t Updating GeoGit...\n\n";
+cd $GEOGIT_HOME_DIR/src/parent;
+git pull;
+
+printf "\n\n\t Building GeoGit...\n\n";
+#mvn clean install -DskipTests;
+
+printf "\n\n\t Setting up the downstream project...\n\n";
+cd $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME;
+echo yes | paver reset;
+paver build_geoserver; paver setup;
+
+printf "\n\n\t Setting up the static files...\n\n";
+echo yes | python manage.py collecstatic;
+
+printf "\n\n\t Setting alias to static files in nginx.conf...\n\n";
+sed -i 's|/usr/share/nginx/geonode/static|$VIRTUAL_ENV/rogue_geonode/rogue_geonode/static_root|' nginx.conf;
+
+printf "\n\n\t Setting GeoNode SITE_URL...\n\n";
+sed -i 's|localhost:8000|'"$SITE_URL"'|' $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNSTREAM_PROJECT_NAME/settings.py;
+
+printf "\n\n\t Setting GEOSERVER_BASE_URL...\n\n";
+sed -i 's|localhost:8080/geoserver|'"$GEOSERVER_BASE_URL"'|' $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNSTREAM_PROJECT_NAME/settings.py;
+
+printf "\n\n DEV_MODE=$DEV_MODE\n\n";
+if [ $DEV_MODE == True ]
+then
+	printf "\n\n\t Modifying pavement.py so no conflict with tomcat7...\n\n";
+	sed -i "s|'start_geoserver',|#'start_geoserver',|" pavement.py;
+
+	printf "\n\n\t Starting GeoNode via paver...\n\n";
+	paver start;
+else
+	printf "\n\n\t Syncing the postgis db...\n\n";
+	python manage.py syncdb --all --noinput;
+	
+	printf "\n\n\t Starting GeoNode via uwsgi...\n\n";
+	./start_geonode.sh; 
+fi
+
+printf "\n\n\t GeoNode setup complete.\n\n";
+printf "\n\n\t Please run the following command:\n";
+printf "\n\n\t sudo ./setup-nginx-conf\n\n";

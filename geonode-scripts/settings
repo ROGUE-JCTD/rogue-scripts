@@ -1,0 +1,16 @@
+#!/bin/bash
+
+DEV_MODE=True
+GEONODE_REPO_URL=https://github.com/kzusy/geonode.git
+GEONODE_BRANCH=upload-work
+GSCONFIG_REPO_URL=https://github.com/jj0hns0n/gsconfig.py.git
+GSCONFIG_BRANCH=data_store_type
+DOWNSTREAM_PROJECT_URL=https://github.com/kzusy/rogue_geonode.git
+DOWNSTREAM_PROJECT_BRANCH=master
+GEONODE_DEPENDENCIES="uwsgi psycopg2"
+DOWNSTREAM_PROJECT_NAME=rogue_geonode
+GEOGIT_HOME_DIR=/home/rogue/dev/GeoGit
+VIRTUAL_ENV=/home/rogue/dev/virtualenvs/geonode
+STATIC_DIR=$VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNSTREAM_PROJECT_NAME/static_root
+SITE_URL=192.168.1.10
+GEOSERVER_BASE_URL=192.168.1.10/geoserver
