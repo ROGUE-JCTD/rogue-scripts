@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#include settings
+source settings
+
+printf "\n\n\t Setting up aias to static file...\n\n";
+ln -sf $STATIC_DIR /etc/nginx/sites-enabled/nginx.conf;
+
+service tomcat7 stop;
+rm -r /var/lib/tomcat7/webapps/geoserver*;
+
+cp $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNTREAM_PROJECT_NAME/geoserver_ext/target/geoserver.war /var/lib/tomcat7/webapps/;
+
+chown tomcat7:tomcat7 /var/lib/tomcat7/webapps/geoserver.war;
+chmod 644 /var/lib/tomcat7/webapps/geoserver.war;
+
+service tomcat7 start;
+
+sleep 30;
+
+service nginx restart;
+
+printf "\n\n\t Deployment to Tomcat7 and nginx complete...\n\n";

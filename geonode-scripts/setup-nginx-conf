@@ -1,7 +1,0 @@
-#!/bin/bash
-
-#include settings
-source settings
-
-printf "\n\n\t Setting up aias to static file...\n\n";
-ln -sf $STATIC_DIR /etc/nginx/sites-enabled/nginx.conf;
