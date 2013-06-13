@@ -67,7 +67,7 @@ then
 	paver start;
 else
 	printf "\n\n\t Syncing the postgis db...\n\n";
-	python manage.py syncdb --all --noinput;
+	paver sync;
 	
 	printf "\n\n\t Starting GeoNode via uwsgi...\n\n";
 	./start_geonode.sh; 
