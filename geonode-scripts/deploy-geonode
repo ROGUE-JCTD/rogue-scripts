@@ -36,7 +36,7 @@ cd $GEOGIT_HOME_DIR/src/parent;
 git pull;
 
 printf "\n\n\t Building GeoGit...\n\n";
-#mvn clean install -DskipTests;
+mvn clean install -DskipTests;
 
 printf "\n\n\t Setting up the downstream project...\n\n";
 cd $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME;
