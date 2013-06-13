@@ -11,6 +11,7 @@ cd $VIRTUAL_ENV;
 source bin/activate;
 
 # Pull down repos
+
 printf "\n\n\t Pulling down $GEONODE_REPO_URL -b $GEONODE_BRANCH...\n\n";
 git clone $GEONODE_REPO_URL -b $GEONODE_BRANCH;
 
@@ -43,10 +44,12 @@ echo yes | paver reset;
 paver build_geoserver; paver setup;
 
 printf "\n\n\t Setting up the static files...\n\n";
-echo yes | python manage.py collecstatic;
+echo yes | python manage.py collectstatic;
+chmod 755 -R $STATIC_DIR;
+chmod 755 $VIRTUAL_ENV $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME;
 
 printf "\n\n\t Setting alias to static files in nginx.conf...\n\n";
-sed -i 's|/usr/share/nginx/geonode/static|$VIRTUAL_ENV/rogue_geonode/rogue_geonode/static_root|' nginx.conf;
+sed -i 's|/usr/share/nginx/geonode/static|'"$VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNSTREAM_PROJECT_NAME/static_root"'|' nginx.conf;
 
 printf "\n\n\t Setting GeoNode SITE_URL...\n\n";
 sed -i 's|localhost:8000|'"$SITE_URL"'|' $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNSTREAM_PROJECT_NAME/settings.py;

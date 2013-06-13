@@ -4,19 +4,21 @@
 source settings
 
 printf "\n\n\t Setting up aias to static file...\n\n";
-ln -sf $STATIC_DIR /etc/nginx/sites-enabled/nginx.conf;
+ln -sf $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/nginx.conf /etc/nginx/sites-enabled/nginx.conf;
 
-service tomcat7 stop;
-rm -r /var/lib/tomcat7/webapps/geoserver*;
+chmod 755 -R $VIRTUAL_ENV;
 
-cp $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNTREAM_PROJECT_NAME/geoserver_ext/target/geoserver.war /var/lib/tomcat7/webapps/;
+#service tomcat7 stop;
+#rm -r /var/lib/tomcat7/webapps/geoserver*;
 
-chown tomcat7:tomcat7 /var/lib/tomcat7/webapps/geoserver.war;
-chmod 644 /var/lib/tomcat7/webapps/geoserver.war;
+#cp $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNTREAM_PROJECT_NAME/geoserver_ext/target/geoserver.war /var/lib/tomcat7/webapps/;
 
-service tomcat7 start;
+#chown tomcat7:tomcat7 /var/lib/tomcat7/webapps/geoserver.war;
+#chmod 644 /var/lib/tomcat7/webapps/geoserver.war;
 
-sleep 30;
+#service tomcat7 start;
+
+#sleep 30;
 
 service nginx restart;
 
