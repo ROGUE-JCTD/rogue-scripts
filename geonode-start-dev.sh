@@ -8,5 +8,5 @@ source /var/lib/rogue-scripts/rogue-variables.sh
 pushd .
 source $GEONODE_VIRTUALENV_PATH/bin/activate
 cd $GEONODE_ROGUE_REO_PATH
-uwsgi --ini django.ini
+paver start
 popd

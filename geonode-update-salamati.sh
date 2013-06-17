@@ -1,8 +1,22 @@
 #!/bin/bash
-GEONODE_VIRTUALENV_PATH=/var/lib/geonode
-GEONODE_STATIC_PATH=$GEONODE_VIRTUALENV_PATH/rogue_geonode/rogue_geonode/static
-GEONODE_TEMPLATE_PATH=$GEONODE_VIRTUALENV_PATH/rogue_geonode/rogue_geonode/templates
+# exit if anything returns failure
+set -e
 
+# pull in paths
+source /var/lib/rogue-scripts/rogue-variables.sh
+
+# call the function defined in rogue-variable.sh to prompt the user
+# to varify paths before continuing
+verify_variables
+
+# if these variables are empty or have been set to empty, abort the script
+if [ -z "$GEONODE_VIRTUALENV_PATH" || -z "$GEONODE_ROGUE_REPO_PATH" ]
+    echo "** Error ** rogue-varibles not set. Aborting script"
+    return -2;
+if
+
+GEONODE_STATIC_PATH=$GEONODE_ROGUE_REPO_PATH/rogue_geonode/static
+GEONODE_TEMPLATE_PATH=$GEONODE_ROGUE_REPO_PATH/rogue_geonode/templates
 SALAMATI_TEMP_DIR=temp-salamati
 
 pushd .
@@ -23,13 +37,11 @@ mv -v $SALAMATI_TEMP_DIR/src/lightbox $GEONODE_STATIC_PATH/geoexplorer/externals
 rm -r $GEONODE_TEMPLATE_PATH/geonode/sdk_header.html
 mv -v $SALAMATI_TEMP_DIR/sdk_header.html $GEONODE_TEMPLATE_PATH/geonode/sdk_header.html
 
-pushd .
-cd $GEONODE_VIRTUALENV_PATH
-source bin/activate
-cd $GEONODE_VIRTUALENV_PATH/geonode
+source $GEONODE_VIRTUALENV_PATH/bin/activate
+
+cd $GEONODE_ROGUE_REPO_PATH
 echo "yes"|python manage.py collectstatic
 chmod 755 -R $GEONODE_STATIC_PATH/../static_root
-popd
 
 rm -r $SALAMATI_TEMP_DIR
 popd
