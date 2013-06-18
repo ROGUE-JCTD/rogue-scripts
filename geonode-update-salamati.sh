@@ -7,13 +7,12 @@ source /var/lib/rogue-scripts/rogue-variables.sh
 
 # call the function defined in rogue-variable.sh to prompt the user
 # to varify paths before continuing
-verify_variables
+prompt_to_verify_paths
 
 # if these variables are empty or have been set to empty, abort the script
-if [ -z "$GEONODE_VIRTUALENV_PATH" || -z "$GEONODE_ROGUE_REPO_PATH" ]
-    echo "** Error ** rogue-varibles not set. Aborting script"
-    return -2;
-if
+is_defined $GEONODE_VIRTUALENV_PATH
+is_defined $GEONODE_ROGUE_REPO_PATH
+
 
 GEONODE_STATIC_PATH=$GEONODE_ROGUE_REPO_PATH/rogue_geonode/static
 GEONODE_TEMPLATE_PATH=$GEONODE_ROGUE_REPO_PATH/rogue_geonode/templates

@@ -21,15 +21,23 @@ echo "=================================================="
 echo ""
 
 
-function verify_variables() {
+function prompt_to_verify_paths() {
     while true; do
         read -p "Are the above paths correct? " yn
         case $yn in
             [Yy]* ) break;;
-            [Nn]* ) return 1;;
+            [Nn]* ) echo "Aborting script";return 1;;
             * ) echo "Please answer yes or no. ";;
         esac
     done
+}
+
+function is_defined() {
+    # if these variables are empty or have been set to empty, abort the script
+    if [ -z "$1" ]; then
+        echo "** Error ** a required variable is not set. Aborting script!";
+        return 2;
+    fi
 }
 
 echo "-- rogue-variables.sh loaded"
