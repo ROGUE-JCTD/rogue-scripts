@@ -29,7 +29,7 @@ rm -r $GEONODE_STATIC_PATH/sdk/lib
 mv -v $SALAMATI_TEMP_DIR/lib $GEONODE_STATIC_PATH/sdk/
 rm -r $GEONODE_STATIC_PATH/sdk/theme
 mv -v $SALAMATI_TEMP_DIR/theme $GEONODE_STATIC_PATH/sdk/
-rm -r $GEONODE_STATIC_PATH/geoexplorer/externals/gxp/src
+rm -r $GEONODE_STATIC_PATH/geoexplorer/externals/gxp/src/theme
 mv -v $SALAMATI_TEMP_DIR/src/gxp/theme $GEONODE_STATIC_PATH/geoexplorer/externals/gxp/src
 rm -r $GEONODE_STATIC_PATH/geoexplorer/externals/lightbox
 mv -v $SALAMATI_TEMP_DIR/src/lightbox $GEONODE_STATIC_PATH/geoexplorer/externals
