@@ -3,22 +3,30 @@
 #include settings
 source settings
 
-printf "\n\n\t Setting up aias to static file...\n\n";
-ln -sf $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/nginx.conf /etc/nginx/sites-enabled/nginx.conf;
-
-chmod 755 -R $VIRTUAL_ENV;
-
+printf "\n\n\t Stop tomcat7 temporarily for updating geoserver...\n\n";
 service tomcat7 stop;
-rm -r /var/lib/tomcat7/webapps/geoserver*;
+sleep 10;
 
-cp $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNTREAM_PROJECT_NAME/geoserver_ext/target/geoserver.war /var/lib/tomcat7/webapps/;
+printf "\n\n\t Download the most recent geoserver.war...\n\n";
+cd /var/lib/tomcat7/webapps
+rm -r geoserver*;
 
-chown tomcat7:tomcat7 /var/lib/tomcat7/webapps/geoserver.war;
-chmod 644 /var/lib/tomcat7/webapps/geoserver.war;
+wget http://jenkins.rogue.lmnsolutions.com/userContent/geoserver.war;
+
+chown tomcat7:tomcat7 geoserver.war;
+chmod 644 geoserver.war;
+
+printf "\n\n\t Restart tomcat7...\n\n";
 
 service tomcat7 start;
 
-sleep 30;
+sleep 15;
+
+printf "\n\n\t Set GeoNode permissions...\n\n";
+chmod 755 -R $VIRTUAL_ENV;
+
+printf "\n\n\t Setting up aias to static file...\n\n";
+ln -sf $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/nginx.conf /etc/nginx/sites-enabled/nginx.conf;
 
 service nginx restart;
 
