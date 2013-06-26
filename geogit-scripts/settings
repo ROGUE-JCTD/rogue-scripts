@@ -1,0 +1,9 @@
+#!/bin/bash
+
+GEOGIT_INSTALL=/home/rogue
+GEOGIT_HOME=$GEOGIT_INSTALL/GeoGit
+GEOGIT_OWNER=rogue
+
+printf "\nGEOGIT_INSTALL=$GEOGIT_INSTALL\n";
+printf "\nGEOGIT_HOME=$GEOGIT_HOME\n";
+printf "\nGEOGIT_OWNER=$GEOGIT_OWNER\n";

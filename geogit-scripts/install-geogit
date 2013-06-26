@@ -1,0 +1,20 @@
+#!/bin/bash
+
+source settings;
+
+printf "\n\n\t Downloading GeoGit...\n\n";
+cd $GEOGIT_INSTALL;
+
+git clone https://github.com/ROGUE-JCTD/GeoGit.git -b SprintRelease;
+
+printf "\n\n\t Building GeoGit...\n\n";
+cd GeoGit/src/parent;
+mvn clean install -DskipTests;
+chown $GEOGIT_OWNER:$GEOGIT_OWNER -R $GEOGIT_HOME;
+
+echo "export PATH=$PATH:$GEOGIT_HOME/src/cli-app/target/geogit/bin" >> /etc/profile;
+
+printf "\n\n\t GeoGit installed... To start using GeoGit, open a new shell, or run\n";
+printf "\t source /etc/profile\n\n";
+
+

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source settings;
+
+cd $GEOGIT_HOME;
+
+git reset --hard;
+git checkout master;
+git branch -D SprintRelease;
+git checkout SprintRelease;
+git pull;
