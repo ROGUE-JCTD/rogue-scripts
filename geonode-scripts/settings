@@ -1,23 +1,23 @@
 #!/bin/bash
 
 DEV_MODE=False
-GEONODE_REPO_URL=https://github.com/kzusy/geonode.git
-GEONODE_BRANCH=upload-work
-GSCONFIG_REPO_URL=https://github.com/kzusy/gsconfig.py.git
-GSCONFIG_BRANCH=working
-DOWNSTREAM_PROJECT_URL=https://github.com/kzusy/rogue_geonode.git
-DOWNSTREAM_PROJECT_BRANCH=working
+#GEONODE_REPO_URL=https://github.com/kzusy/geonode.git
+#GEONODE_BRANCH=upload-work
+GSCONFIG_REPO_URL=https://github.com/jj0hns0n/gsconfig.py.git
+GSCONFIG_BRANCH=data_store_type
+DOWNSTREAM_PROJECT_URL=https://github.com/ROGUE-JCTD/rogue_geonode.git
+DOWNSTREAM_PROJECT_BRANCH=master
 GEONODE_DEPENDENCIES="uwsgi psycopg2"
 DOWNSTREAM_PROJECT_NAME=rogue_geonode
 GEOGIT_HOME_DIR=/home/rogue/dev/GeoGit
 VIRTUAL_ENV=/var/lib/geonode
 STATIC_DIR=$VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/$DOWNSTREAM_PROJECT_NAME/static_root
-SITE_URL=192.168.10.197
-GEOSERVER_BASE_URL=192.168.10.197/geoserver
+SITE_URL=192.168.10.140
+GEOSERVER_BASE_URL=192.168.10.140/geoserver
 
 printf "DEV_MODE=$DEV_MODE\n";
-printf "GEONODE_REPO_URL=$GEONODE_REPO_URL\n";
-printf "GEONODE_BRANCH=$GEONODE_REPO_URL\n";
+#printf "GEONODE_REPO_URL=$GEONODE_REPO_URL\n";
+#printf "GEONODE_BRANCH=$GEONODE_REPO_URL\n";
 printf "GSCONFIG_REPO_URL=$GSCONFIG_REPO_URL\n";
 printf "GSCONFIG_BRANCH=$GSCONFIG_BRANCH\n";
 printf "DOWNSTREAM_PROJECT_URL=$DOWNSTREAM_PROJECT_URL\n";
