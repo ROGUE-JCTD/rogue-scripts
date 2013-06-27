@@ -15,3 +15,15 @@ printf "\n\n\t Installing tools required for static development...\n\n";
 npm install -g lessc;
 npm install -g bower;
 npm install -g bower-installer;
+
+printf "\n\n\t Install static files with bower...\n\n;";
+cd $VIRTUAL_ENV;
+source bin/activate;
+cd src/geonode/geonode/static/;
+bower install && bower-installer;
+
+printf "\n\n\t Setting up the static files...\n\n;";
+cd $VIRTUAL_ENV/$DOWNTREAM_PROJECT_NAME;
+echo yes | python manage.py collectstatic;
+chmod 755 -R $STATIC_DIR;
+
