@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# This script is for temporary dependencies
+
+# Install nodejs
+
+printf "\n\n\t Installing NodeJS and it's dependencies...\n\n";
+apt-get update;
+apt-get install -y python-software-properties python g++ make;
+add-apt-repository -y ppa:chris-lea/node.js
+apt-get update;
+apt-get install -y nodejs;
+
+printf "\n\n\t Installing tools required for static development...\n\n";
+npm install -g lessc;
+npm install -g bower;
+npm install -g bower-installer;
