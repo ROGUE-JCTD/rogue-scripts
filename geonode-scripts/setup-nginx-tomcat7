@@ -1,33 +1,7 @@
 #!/bin/bash
 
-#include settings
-source settings
+./setup-tomcat7
 
-printf "\n\n\t Stop tomcat7 temporarily for updating geoserver...\n\n";
-service tomcat7 stop;
 sleep 10;
 
-printf "\n\n\t Download the most recent geoserver.war...\n\n";
-cd /var/lib/tomcat7/webapps
-rm -r geoserver*;
-
-wget http://jenkins.rogue.lmnsolutions.com/userContent/geoserver.war;
-
-chown tomcat7:tomcat7 geoserver.war;
-chmod 644 geoserver.war;
-
-printf "\n\n\t Restart tomcat7...\n\n";
-
-service tomcat7 start;
-
-sleep 15;
-
-printf "\n\n\t Set GeoNode permissions...\n\n";
-chmod 755 -R $VIRTUAL_ENV;
-
-printf "\n\n\t Setting up aias to static file...\n\n";
-ln -sf $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/nginx.conf /etc/nginx/sites-enabled/nginx.conf;
-
-service nginx restart;
-
-printf "\n\n\t Deployment to Tomcat7 and nginx complete...\n\n";
+./setup-nginx

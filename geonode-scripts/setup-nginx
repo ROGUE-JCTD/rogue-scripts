@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#include settings
+source settings
+
+printf "\n\n\t Set GeoNode permissions...\n\n";
+chmod 755 -R $VIRTUAL_ENV;
+
+printf "\n\n\t Setting up aias to static file...\n\n";
+ln -sf $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME/nginx.conf /etc/nginx/sites-enabled/nginx.conf;
+
+service nginx restart;
+
+printf "\n\n\t Deployment to Nginx complete...\n\n";

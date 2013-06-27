@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#include settings
+source settings
+
+printf "\n\n\t Stop tomcat7 temporarily for updating geoserver...\n\n";
+service tomcat7 stop;
+sleep 10;
+
+printf "\n\n\t Download the most recent geoserver.war...\n\n";
+cd /var/lib/tomcat7/webapps
+rm -r geoserver*;
+
+wget http://jenkins.rogue.lmnsolutions.com/userContent/geoserver.war;
+
+chown tomcat7:tomcat7 geoserver.war;
+chmod 644 geoserver.war;
+
+printf "\n\n\t Restart tomcat7...\n\n";
+
+service tomcat7 start;
+
+printf "\n\n\t Deployment to Tomcat7 complete...\n\n";
