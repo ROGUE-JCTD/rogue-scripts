@@ -3,6 +3,7 @@
 # This script is for temporary dependencies
 
 # Install nodejs
+source settings;
 
 printf "\n\n\t Installing NodeJS and it's dependencies...\n\n";
 apt-get update;
@@ -12,7 +13,7 @@ apt-get update;
 apt-get install -y nodejs;
 
 printf "\n\n\t Installing tools required for static development...\n\n";
-npm install -g lessc;
+npm install -g less;
 npm install -g bower;
 npm install -g bower-installer;
 
@@ -23,7 +24,7 @@ cd src/geonode/geonode/static/;
 bower install && bower-installer;
 
 printf "\n\n\t Setting up the static files...\n\n;";
-cd $VIRTUAL_ENV/$DOWNTREAM_PROJECT_NAME;
+cd $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME;
 echo yes | python manage.py collectstatic;
 chmod 755 -R $STATIC_DIR;
 
