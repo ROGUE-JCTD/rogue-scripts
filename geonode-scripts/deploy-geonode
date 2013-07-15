@@ -30,21 +30,15 @@ printf "\n\n\t Installing geonode...\n\n";
 #pip install -e geonode --use-mirrors;
 pip install -e git+https://github.com/GeoNode/geonode.git#egg=geonode
 
+printf "\n\n\t Installing $DOWNSTREAM_PROJECT_NAME...\n\n";
+pip install -e $DOWNSTREAM_PROJECT_NAME;
+
 printf "\n\n\t Installing gsconfig.py...\n\n";
 pip install -e gsconfig.py;
-
-#printf "\n\n\t Updating GeoGit...\n\n";
-#cd $GEOGIT_HOME_DIR/src/parent;
-#git pull;
-
-#printf "\n\n\t Building GeoGit...\n\n";
-#mvn clean install -DskipTests;
 
 printf "\n\n\t Setting up the downstream project...\n\n";
 cd $VIRTUAL_ENV/$DOWNSTREAM_PROJECT_NAME;
 echo yes | paver reset;
-#paver build_geoserver;
-paver setup;
 
 printf "\n\n\t Setting up the static files...\n\n";
 echo yes | python manage.py collectstatic;
