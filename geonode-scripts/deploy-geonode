@@ -6,6 +6,9 @@ source settings
 
 pushd .;
 
+printf "\n\n\t Installing GeoNode dependencies...\n\n";
+./install-apt-dependencies;
+
 printf "\n\n\t Creating virtualenv...\n\n";
 virtualenv $VIRTUAL_ENV;
 

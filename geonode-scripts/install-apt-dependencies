@@ -1,0 +1,15 @@
+#!/bin/bash
+
+sudo apt-get update;
+
+# Essential build tools and libraries
+sudo apt-get install -y build-essential libxml2-dev libxslt-dev
+
+# Python native dependencies
+sudo apt-get install -y python-dev python-virtualenv python-imaging python-lxml python-pyproj python-shapely python-nose python-httplib2
+
+# Supporting tools
+sudo apt-get install -y  git gettext
+
+# Postgresql dependencies
+sudo apt-get install -y postgresql-client-9.1 libpq-dev
