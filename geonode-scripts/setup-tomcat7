@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#include settings
 source settings
 
 printf "\n\n\t Stop tomcat7 temporarily for updating geoserver...\n\n";
@@ -17,6 +16,18 @@ chown tomcat7:tomcat7 geoserver.war;
 chmod 644 geoserver.war;
 
 printf "\n\n\t Restart tomcat7...\n\n";
+
+service tomcat7 start;
+
+sleep 4;
+
+service tomcat7 stop;
+
+cd geoserver/WEB-INF;
+
+sed -i 's|C\:\\eclipse\\workspace\\geoserver_trunk\\cite\\confCiteWFSPostGIS|'"$GEOSERVER_DATA_DIR"'|' web.xml;
+sed -i '55d' web.xml;
+sed -i '50d' web.xml;
 
 service tomcat7 start;
 
