@@ -70,7 +70,7 @@ sed -i 's|geogit_repository=|'"geogit_repository='/data/geogit/' + "'|' $VIRTUAL
 
 printf "\n\n\t Set up directory for the geogit repository...\n\n";
 mkdir -p /data/geogit;
-chmod 755 /data /data/geogit;
+chmod 777 /data /data/geogit;
 
 printf "\n\n DEV_MODE=$DEV_MODE\n\n";
 if [ $DEV_MODE == True ]
