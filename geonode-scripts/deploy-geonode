@@ -68,6 +68,12 @@ chmod 755 -R $VIRTUAL_ENV;
 printf "\n\n\t Setting up geonode geogit_repository fix...\n\n";
 sed -i 's|geogit_repository=|'"geogit_repository='/data/geogit/' + "'|' $VIRTUAL_ENV/src/geonode/geonode/upload/utils.py;
 
+printf "\n\n\t Setting GeoNode SITE_URL...\n\n";
+sed -i 's|localhost:8000|'"$SITE_URL"'|' $SETTINGS_PATH/settings.py;
+
+printf "\n\n\t Setting GEOSERVER_BASE_URL...\n\n";
+sed -i 's|localhost:8080/geoserver|'"$GEOSERVER_BASE_URL"'|' $SETTINGS_PATH/settings.py;
+
 printf "\n\n\t Set up directory for the geogit repository...\n\n";
 mkdir -p /data/geogit;
 chmod 777 /data /data/geogit;
