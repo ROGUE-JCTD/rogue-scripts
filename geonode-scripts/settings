@@ -50,7 +50,7 @@ UPDATE_GEOSERVER_WAR=False
 
 printf "DEV_MODE=$DEV_MODE\n";
 
-prtinf "\n_REPO INFO_\n\n";
+printf "\n_REPO INFO_\n\n";
 printf "GEONODE_REPO_URL=$GEONODE_REPO_URL\n";
 printf "GEONODE_BRANCH=$GEONODE_BRANCH\n";
 printf "GSCONFIG_REPO_URL=$GSCONFIG_REPO_URL\n";
