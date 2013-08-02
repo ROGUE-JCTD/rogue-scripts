@@ -1,0 +1,59 @@
+How to set-up Unison file sync on a VM as well as setting it so that rogue and tomcat7 users can both access geogit repo’s.
+
+
+NOTE: Make a snapshot of the VM before attempting this!
+
+
+1. First we make a group for Rogue and Tomcat7 users
+	a. sudo groupadd roguecat
+
+2. Add Rogue and Tomcat7 users to this group
+	a. sudo usermod -a -G roguecat rogue
+	b. sudo usermod -a -G roguecat tomcat7
+
+3. Update apt-get packages
+	a. sudo apt-get update
+
+4. Install Unison
+	a. sudo apt-get install unison
+
+5. Install ACL to set-up default file permissions on creation
+	a. sudo apt-get install acl
+
+6. To activate acl modify the drive with the acl option
+	a. sudo nano /etc/fstab
+	b. add acl to the end of the / drive options
+		1.  /               ext4    errors=remount-ro,acl 0       1
+
+7. Just to be safe restart the vm and make sure it runs correctly
+	a. sudo reboot
+
+8. Now to set up default group and permissions on the folders we want
+	a. Change permissions of parent directories
+		i. 	cd /var/lib/
+		ii. 	sudo chown tomcat7:roguecat geoserver_data/ geoserver_data/data_dir geoserver_data/data_dir/data/ geoserver_data/data_dir/data/geogit/ geoserver_data/data_dir/file-service-store
+		iii. 	sudo chmod 775 geoserver_data/ geoserver_data/data_dir geoserver_data/data_dir/data/ geoserver_data/data_dir/data/geogit/ geoserver_data/data_dir/file-service-store
+	b. Now to set it up so that any file or folder created inside of the directories has the roguecat group
+		i. 	cd geoserver_data/data_dir/
+		ii. 	sudo chmod g+s data/geogit file-service-store
+	c. Now to set the default permissions of files or folders created inside of the directories
+		i. 	sudo setfacl -d -m g::rwx data/geogit/
+		ii. 	sudo setfacl -d -m o::rx data/geogit/
+		iii. 	sudo setfacl -d -m g::rwx file-service-store/
+		iv. 	sudo setfacl -d -m o::rx file-service-store/
+	d. Now any files or folders created in those directories will have roguecat group and rwx permissions for group and rx permissions for other.
+	e. If you had files and folders already in those directories before setting this up they won’t have everything set up correctly. To fix this perform these operations.
+		i. 	sudo find data/geogit/ -type d -print0 | xargs -0 chmod 775
+		ii. 	sudo find data/geogit/ -type f -print0 | xargs -0 chmod 664
+		iii. 	sudo chown tomcat7:roguecat -R data/geogit/
+		iv. 	sudo find data/geogit/ -type d -print0 | xargs -0 setfacl -d -m g::rwx
+		v. 	sudo find data/geogit/ -type d -print0 | xargs -0 setfacl -d -m o::rx
+		vi. 	sudo chown tomcat7:roguecat -R file-service-store/
+		vii. 	cd file-service-store/
+		viii. 	sudo chmod 664 .
+
+9. Use Unison to sync a folder on a remote machine
+	a. unison -batch /path/to/folder ssh://user@ip//path/to/folder
+
+
+NOTE: Unison will carry over the permissions but not owner and group. So if you are syncing with a folder that has files without the correct permissions make sure to change the permissions once it has been copied over.
