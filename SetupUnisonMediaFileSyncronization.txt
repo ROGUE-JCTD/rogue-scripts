@@ -50,7 +50,7 @@ NOTE: Make a snapshot of the VM before attempting this!
 		v. 	sudo find data/geogit/ -type d -print0 | xargs -0 setfacl -d -m o::rx
 		vi. 	sudo chown tomcat7:roguecat -R file-service-store/
 		vii. 	cd file-service-store/
-		viii. 	sudo chmod 664 .
+		viii. 	sudo chmod 664 *
 
 9. Use Unison to sync a folder on a remote machine
 	a. unison -batch /path/to/folder ssh://user@ip//path/to/folder
