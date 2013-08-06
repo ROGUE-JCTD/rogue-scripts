@@ -9,6 +9,12 @@ MAPPING_FILE=osmmapping.txt
 # The remote to sync changes to. Note, this is not the URL, it's the remote name (e.g. origin)
 SYNC_WITH_REMOTE=syncrepo
 
+# Auto-Sync Delay (in seconds)
+AUTO_SYNC_DELAY=60
+
+# Sync Attempts
+SYNC_ATTEMPTS=10
+
 # Switch to the repository directory
 cd $REPO_PATH
 
@@ -30,5 +36,10 @@ geogit commit -m "Updated Mappings"
 printf "\n===========================";
 printf "\nSynchronizing repository...";
 printf "\n===========================\n";
-geogit pull $SYNC_WITH_REMOTE
-geogit push $SYNC_WITH_REMOTE
+for i in `seq 1 $SYNC_ATTEMPTS`
+do
+	echo "Attempt $i of $SYNC_ATTEMPTS."
+	geogit pull $SYNC_WITH_REMOTE
+	geogit push $SYNC_WITH_REMOTE
+	sleep $AUTO_SYNC_DELAY
+done
