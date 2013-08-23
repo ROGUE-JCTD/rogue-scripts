@@ -3,7 +3,7 @@
 DEV_MODE=False
 
 # REPO INFO
-GSCONFIG_REPO_URL=https://github.com/jj0hns0n/gsconfig.py.git
+GSCONFIG_REPO_URL=https://github.com/ROGUE-JCTD/gsconfig.py.git
 GSCONFIG_BRANCH=data_store_type
 
 DOWNSTREAM_PROJECT_URL=https://github.com/ROGUE-JCTD/rogue_geonode.git
