@@ -232,7 +232,15 @@ function main(){
     # when using DHCP, need to get ip and when static
     get_ip_address
 
-    update_geonode_settings
+
+#    geonode settings config has changed and this script doesn't cover it yet
+#    things that need to be changed in geonode:
+#        in /var/lib/geonode/rogue_geonode/rogue_geonode/settings.py  
+#            SITEURL needs to change to point to geonode for example: 192.168.10.134  (note not geoserver)
+#        in local_settings.py 
+#            all bd username passwords ans url
+#            geoserver location <<==== this is the one we must do either way since it i resolved on client
+#    update_geonode_settings
 
     update_geoserver_settings
 
