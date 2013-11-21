@@ -9,13 +9,22 @@ var TestModuel = (function(map){
     lonMax: 180,
     zoomMin: 0,
     zoomMax: 14,
-    createFeature: true
+    createFeature: true,
+
+    frequency: 3000,
+
+    username: '',
+    password: '',
+    layerName: 'canchas_de_futbol', //'incidentes_copeco',
+    attributeName: 'comentarios',
+    attributeValue: 'TestModuel'
   };
 
   var interval = null;
   var projection4326 = new OpenLayers.Projection('EPSG:4326');
   var projection900913 = new OpenLayers.Projection('EPSG:900913');
   var runCounter = 0;
+  var dateLastRun = null;
 
   function getRandomBetween(min, max) {
     return Math.random() * (max - min) + min;
@@ -37,48 +46,77 @@ var TestModuel = (function(map){
 
   function run() {
     runCounter += 1;
+    dateLastRun = new Date();
+
     var view = getRandomView();
-    console.log('---- Test.run, counter: ', runCounter, ', view: ', view);
     map.setCenter(view.center, view.zoom);
 
     if (config.createFeature) {
-      createFeature(view.center.lon, view.center.lat);
+      // if we are creating features, only set another timeout after last creation success
+      createFeature(view.center.lon, view.center.lat, function() {
+        interval = setTimeout(run, config.frequency);
+      });
+    } else {
+      interval = setTimeout(run, config.frequency);
+      console.log('---- move map @ ' + dateLastRun + '. runCounter: ' + runCounter + ', view: ', view);
     }
   }
 
-  function getWfsData(lon, lat) {
+  function getWfsData(lon, lat, date) {
     return '' +
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
         'service= "WFS" version="1.1.0" ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
         '<wfs:Insert>' +
-        '<feature:incidentes_copeco xmlns:feature="http://www.geonode.org/">' +
+        '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
         '<feature:geom>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:900913">' +
         '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
         '</gml:Point>' +
         '</feature:geom>' +
-        '<feature:comentarios> TestModuel.runCounter ' + runCounter + '</feature:comentarios>' +
-        '</feature:incidentes_copeco>' +
+        '<feature:' + config.attributeName + '>' + config.attributeValue + ' runCounter: ' + runCounter + ' ' + date + '</feature:' + config.attributeName + '>' +
+        '</feature:' + config.layerName + '>' +
         '</wfs:Insert>' +
         '</wfs:Transaction>';
   }
 
-  function createFeature(lon, lat){
-    var encodedCredentials = $.base64.encode('admin' + ':' + 'g30n0d3');
+  function createFeature(lon, lat, callback_success){
+
+    if (config.username && config.password && (typeof config.headerData === 'undefined')) {
+      config.headerData = {
+        'Content-Type': 'text/xml;charset=utf-8',
+        'Authorization': 'Basic ' + $.base64.encode(config.username + ':' + config.password)
+      }
+    }
+
+    var dateStart = new Date();
+    var timeInMillies = Date.now();
+
     var request = new OpenLayers.Request.POST({
       url: '/geoserver/wfs/WfsDispatcher',
-      data: getWfsData(lon, lat),
-      headers: {
-        'Content-Type': 'text/xml;charset=utf-8',
-        'Authorization': 'Basic ' + encodedCredentials
-      },
+      data: getWfsData(lon, lat, dateLastRun),
+      headers: config.headerData,
       callback: function(response){
-        console.log('---- wfst success');
-      },
-      failure: function(response){
-        Arbiter.error('====[ Error: wfst failed. response: ', response);
+
+        if (response.status === 200) {
+
+          if (response.responseText.indexOf("ExceptionReport") !== -1 ){
+            console.log('====[ TestModuel. Wfs Transaction Exception Report: ', response.responseText);
+            p.stop();
+            alert('TestModuel. Wfs Transaction Exception Report. see console. missing username/password on an endpoint that requires authentication can cause this error.  verify username: ' + config.username + ', password: ' + config.password);
+          } else {
+            console.log('---- createFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter + ' post duration: ', (Date.now() - timeInMillies) , ', response: ', response);
+
+            callback_success();
+          }
+        } else if (response.status === 401) {
+          console.log('====[ Error: Wfs Transaction, Unauthorized: ', response);
+          alert('TestModuel. Wfs Transaction, Unauthorized. verify username: ' + config.username + ', password: ' + config.password);
+        } else {
+          console.log('====[ Error: wfst response. response: ', response);
+          alert('TestModuel. Wfs Transaction failed. ');
+        }
       }
     });
   }
@@ -91,14 +129,11 @@ var TestModuel = (function(map){
       p.stop();
     }
 
-    if (typeof frequency == undefined || !frequency) {
-      frequency = 3000;
+    if (typeof frequency !== 'undefined' && frequency) {
+      config.frequency = frequency;
     }
 
-    console.log('====[ startTest. frequency: ', frequency);
-    var context = this;
-    interval = setInterval(run, frequency);
-    // also run immediately
+    console.log('====[ startTest. frequency: ', config.frequency);
     run();
   };
 
@@ -107,10 +142,11 @@ var TestModuel = (function(map){
     clearInterval(interval);
   };
 
+  p.getConfig = function() {
+    return config;
+  };
+
   return p;
 }(app.mapPanel.map));
 
 TestModuel.start();
-
-// just make map available for easier access
-var map = app.mapPanel.map;
