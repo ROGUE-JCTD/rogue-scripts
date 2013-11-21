@@ -3,23 +3,41 @@
 var TestModule = (function(map){
 
   var config = {
+
+    // which part of the map to select a random point from
     latMin: -90,
     latMax: 90,
     lonMin: -180,
     lonMax: 180,
+
+    // how far to zoom in / out
     zoomMin: 0,
     zoomMax: 14,
 
-    createFeature: true,
-
+    // how often to run in milliseconds
     frequency: 3000,
-    maxRunCounter: 0,    // if set and greater than zero, run will only run these many times and then automatically stop
 
+    // if set and greater than zero, run will only run these many times and then automatically stop
+    maxRunCounter: 0,
+
+    // username and password to connect to geoserver when making a Wfs Transaction
     username: 'admin',
     password: 'g30n0d3',
+
+    // when true, in addition to moving the camera
+    createFeature: true,
+
+    // name of the layer to to which features will be added
     layerName: 'canchas_de_futbol', //'incidentes_copeco',
+
+    // name of the column to which a log msg will be written to when a feature is placed
     attributeName: 'comentarios',
-    attributeValue: 'TestModule'
+
+    // this string gets prepended to the date and run count and features' attributeName value will be set to the result
+    attributeValue: 'TestModule',
+
+    // if teh geometry attribute type is not geom, it can be set here. for example, 'the_geom'
+    geomAttributeName: 'geom'
   };
 
   var timeout = null;
@@ -83,11 +101,11 @@ var TestModule = (function(map){
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
         '<wfs:Insert>' +
         '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
-        '<feature:geom>' +
+        '<feature:' + config.geomAttributeName + '>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:900913">' +
         '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
         '</gml:Point>' +
-        '</feature:geom>' +
+        '</feature:' + config.geomAttributeName + '>' +
         '<feature:' + config.attributeName + '>' + config.attributeValue + ' runCounter: ' + runCounter + ' ' + date + '</feature:' + config.attributeName + '>' +
         '</feature:' + config.layerName + '>' +
         '</wfs:Insert>' +
