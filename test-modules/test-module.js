@@ -15,10 +15,10 @@ var TestModule = (function(map){
     zoomMax: 14,
 
     // how often to run in milliseconds
-    frequency: 3000,
+    frequency: 10000,
 
     // if set and greater than zero, run will only run these many times and then automatically stop
-    maxRunCounter: 0,
+    runCounterMax: 0,
 
     // username and password to connect to geoserver when making a Wfs Transaction
     username: 'admin',
@@ -27,6 +27,10 @@ var TestModule = (function(map){
     // when true, in addition to moving the camera
     createFeature: true,
 
+    // when createFeature is true, createFeatureConcurrentCount number of features will be created at once.
+    // default is 1 causing only 1 feature creation per timer trigger
+    createFeatureConcurrentCount: 5,
+
     // name of the layer to to which features will be added
     layerName: 'canchas_de_futbol', //'incidentes_copeco',
 
@@ -34,7 +38,7 @@ var TestModule = (function(map){
     attributeName: 'comentarios',
 
     // this string gets prepended to the date and run count and features' attributeName value will be set to the result
-    attributeValue: 'TestModule',
+    attributeValuePrefix: 'TestModule',
 
     // if teh geometry attribute type is not geom, it can be set here. for example, 'the_geom'
     geomAttributeName: 'geom'
@@ -72,23 +76,31 @@ var TestModule = (function(map){
     map.setCenter(view.center, view.zoom);
 
     if (config.createFeature) {
-      // if we are creating features, only set another timeout after last creation success
-      createFeature(view.center.lon, view.center.lat, function() {
-        setTimer();
-      });
+      var concurrentCompletedCount = 0;
+
+      for (var i=0; i < config.createFeatureConcurrentCount; i += 1) {
+        // if we are creating features, only set timer after previous create completes
+        createFeature(view.center.lon, view.center.lat, function() {
+          concurrentCompletedCount += 1;
+          // once the number of completed concurrent runs complete, set timer
+          if (concurrentCompletedCount >= config.createFeatureConcurrentCount) {
+            setTimer();
+          }
+        });
+      }
     } else {
-      // when in center map only mode, set timer again.
+      // when in only move map mode, set timer again.
       setTimer();
       console.log('---- move map @ ' + dateLastRun + '. runCounter: ' + runCounter + ', view: ', view);
     }
   }
 
   function setTimer() {
-    if (typeof config.maxRunCounter !== 'undefined' && (!config.maxRunCounter || runCounter < config.maxRunCounter)) {
+    if (typeof config.runCounterMax !== 'undefined' && (!config.runCounterMax || runCounter < config.runCounterMax)) {
       timeout = setTimeout(run, config.frequency);
     } else {
-      console.log('----[ stopping TestModule because runCounter reached maxRunCounter. runCounter: ' + runCounter);
-      alert(' TestModule stopped as requested by maxRunCounter. number of times ran: ' + runCounter);
+      console.log('----[ stopping TestModule because runCounter reached runCounterMax. runCounter: ' + runCounter);
+      alert(' TestModule stopped as requested by runCounterMax. number of times ran: ' + runCounter);
       p.stop();
     }
   }
@@ -106,13 +118,13 @@ var TestModule = (function(map){
         '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
         '</gml:Point>' +
         '</feature:' + config.geomAttributeName + '>' +
-        '<feature:' + config.attributeName + '>' + config.attributeValue + ' runCounter: ' + runCounter + ' ' + date + '</feature:' + config.attributeName + '>' +
+        '<feature:' + config.attributeName + '>' + config.attributeValuePrefix + ' runCounter: ' + runCounter + ' ' + date + '</feature:' + config.attributeName + '>' +
         '</feature:' + config.layerName + '>' +
         '</wfs:Insert>' +
         '</wfs:Transaction>';
   }
 
-  function createFeature(lon, lat, callback_success){
+  function createFeature(lon, lat, callback_success, callback_error){
 
     if (config.username && config.password && (typeof config.headerData === 'undefined')) {
       config.headerData = {
@@ -134,30 +146,46 @@ var TestModule = (function(map){
 
           // if a feature was inserted, post succeeded
           if (response.responseText.indexOf("<wfs:totalInserted>1</wfs:totalInserted>") !== -1) {
-            console.log('---- createFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter + ' post duration: ', (Date.now() - timeInMillies) , ', response: ', response);
-            callback_success();
+            console.log('---- createFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
+                ' post duration: ', (Date.now() - timeInMillies) , ', response: ', response);
+
+            if (callback_success) {
+              callback_success();
+            }
           } else if (response.responseText.indexOf("ExceptionReport") !== -1 ){
             console.log('====[ TestModule. Wfs Transaction Exception occured: ', response.responseText);
             p.stop();
-            var begin = response.responseText.indexOf("<ows:ExceptionText>");
-            var end = response.responseText.indexOf("</ows:ExceptionText>");
+            var begin = response.responseText.indexOf('<ows:ExceptionText>');
+            var end = response.responseText.indexOf('</ows:ExceptionText>');
             var exceptionText = '';
             if (begin !== -1 && end !== -1) {
-              exceptionText = str.substring(begin, end);
+              exceptionText = response.responseText.substring(begin + '<ows:ExceptionText>'.length, end);
             }
             alert('Wfs-T Exception! See console for response. ExceptionText: ' + exceptionText);
+            if (callback_error) {
+              callback_error();
+            }
           } else {
             console.log('====[ TestModule. Unknown Status or Error #1: ', response.responseText);
             p.stop();
             alert('Wfs-T Unknown Status or Error. See console for response.');
+            if (callback_error) {
+              callback_error();
+            }
           }
         } else if (response.status === 401) {
           console.log('====[ Error: Wfs Transaction, Unauthorized: ', response);
           alert('TestModule. Wfs-T, unauthorized. Verify username: ' + config.username + ', password: ' + config.password);
+          if (callback_error) {
+            callback_error();
+          }
         } else {
           console.log('====[ TestModule. Unknown Status or Error #2: ', response.responseText);
           p.stop();
           alert('Wfs-T Unknown Status or Error. See console for response.');
+          if (callback_error) {
+            callback_error();
+          }
         }
       }
     });
