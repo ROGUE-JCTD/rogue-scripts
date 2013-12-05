@@ -22,7 +22,7 @@ var TestModule = (function(map){
 
     // username and password to connect to geoserver when making a Wfs Transaction
     username: 'admin',
-    password: 'g30n0d3',
+    password: 'geoserver',
 
     // when true, in addition to moving the camera
     createFeature: true,
