@@ -48,7 +48,7 @@ var TestModule = (function(){
   var httpService = angular.element('html').injector().get('$http');
   var timeout = null;
   var projection4326 = 'EPSG:4326';
-  var projection900913 = 'EPSG:900913';
+  var projectionMap = mapService.map.getView().getView2D().getProjection().getCode();
   var runCounter = 0;
   var dateLastRun = null;
 
@@ -61,7 +61,7 @@ var TestModule = (function(){
     var lon = getRandomBetween(config.lonMin, config.lonMax);
     var zoom = Math.floor(getRandomBetween(config.zoomMin, config.zoomMax));
     var point = new ol.geom.Point([lon, lat]);
-    var transform = ol.proj.getTransform(projection4326, projection900913);
+    var transform = ol.proj.getTransform(projection4326, projectionMap);
     point.transform(transform);
 
     return {
@@ -123,7 +123,7 @@ var TestModule = (function(){
         '<wfs:Insert>' +
         '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
         '<feature:' + config.geomAttributeName + '>' +
-        '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + config.layerProjection + '">' +
+        '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
         '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
         '</gml:Point>' +
         '</feature:' + config.geomAttributeName + '>' +
