@@ -24,24 +24,30 @@ var TestModule = (function(){
     username: 'admin',
     password: 'admin',
 
-    // when true, in addition to moving the camera
-    createFeature: false,
-
-    // when createFeature is true, createFeatureConcurrentCount number of features will be created at once.
+    // createFeatureConcurrentCount number of features will be created in a loop. This will help test concurrency issues.
     // default is 1 causing only 1 feature creation per timer trigger
     createFeatureConcurrentCount: 1,
 
     // name of the layer to to which features will be added
-    layerName: 'canchas_de_futbol', //'incidentes_copeco',
+    layerName: 'incidentes_copeco', //'canchas_de_futbol',
 
-    // name of the column to which a log msg will be written to when a feature is placed
-    attributeName: 'comentarios',
-
-    // this string gets prepended to the date and run count and features' attributeName value will be set to the result
-    attributeValuePrefix: 'TestModule',
+    // attributes and values to set them to when creating a feature
+    attributes: {
+      evento: 'otro', // nino_perdido, accidente_ambulancia, incidente_de_trafico, danos_y_perjuicios, otro
+      comentarios: 'yoyo' //'eval("TestModule" + " runCounter: " + runCounter + " date: " + date)'
+    },
 
     // if teh geometry attribute type is not geom, it can be set here. for example, 'the_geom'
-    geomAttributeName: 'geom'
+    geomAttributeName: 'geom',
+
+    // list of available operations and a corresponding weight. The higher the weight relative to the other available
+    // operations, the more often it will tend to get selected.
+    operations: {
+      createFeature: 50,
+      removeFeature: 0,
+      modifyFeature: 0,
+      moveView: 10
+    }
   };
 
   var mapService = angular.element('html').injector().get('mapService');
@@ -51,6 +57,7 @@ var TestModule = (function(){
   var projectionMap = mapService.map.getView().getView2D().getProjection().getCode();
   var runCounter = 0;
   var dateLastRun = null;
+  var concurrentCompletedCount = 0;
 
   function getRandomBetween(min, max) {
     return Math.random() * (max - min) + min;
@@ -70,36 +77,101 @@ var TestModule = (function(){
     };
   }
 
+  function getRandomfeature() {
+    //TODO: select a random feature from all available features in the specified layer
+  }
+
+  function getViewFromFeature(feature) {
+    //TODO: given a feature, return a view object with structure similar to what getRandomView returns
+  }
+
+  // randomly select an operation based on the user specified weights of the operations
+  function selectOperation() {
+    var pointSum = 0;
+
+    for (var op in config.operations) {
+      pointSum += config.operations[op];
+    }
+
+    var position = Math.random() * pointSum;
+
+    var currentSum = 0;
+
+    for (op in config.operations) {
+      currentSum += config.operations[op];
+
+      if (position < currentSum) {
+        return op;
+      }
+    }
+
+    alert ('error: selectOperation failed! should never hit this');
+  }
+
   function run() {
     runCounter += 1;
     dateLastRun = new Date();
 
+    var op = selectOperation();
+
+    // call the selected operation's run function
+    var operationFunctionName = 'run_' + op;
+    console.log('-- operation: ' + operationFunctionName);
+    eval(operationFunctionName + '()');
+  }
+
+  function run_moveView() {
     var view = getRandomView();
-    var pan = ol.animation.pan({source: mapService.map.getView().getView2D().getCenter()});
-    var zoom = ol.animation.zoom({resolution: mapService.map.getView().getView2D().getResolution()});
-    mapService.map.beforeRender(pan, zoom);
-    mapService.map.getView().getView2D().setCenter(view.center);
-    mapService.map.getView().getView2D().setZoom(view.zoom);
+    moveToView(view);
+    console.log('---- moveView @ ' + dateLastRun + '. runCounter: ' + runCounter + ', view: ', view);
 
-    if (config.createFeature) {
-      var concurrentCompletedCount = 0;
+    // we can immediately set the timer again since this operation does not take any time to execute
+    setTimer();
+  }
 
-      var successFunc = function() {
-        concurrentCompletedCount += 1;
-        // once the number of completed concurrent runs complete, set timer
-        if (concurrentCompletedCount >= config.createFeatureConcurrentCount) {
-          setTimer();
-        }
-      };
+  function run_createFeature() {
+    var view = getRandomView();
+    moveToView(view);
 
-      for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
-        // if we are creating features, only set timer after previous create completes
-        createFeature(view.center[0], view.center[1], successFunc);
+    for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
+      createFeature(view.center[0], view.center[1], setTimerAfterConcurrentsComplete);
+    }
+  }
+
+  function run_removeFeature() {
+    for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
+      var feature = getRandomfeature();
+      var view = getViewFromFeature(feature);
+
+      // only move to the location of the first feature we are trying to remove
+      if (i === 0) {
+        moveToView(view);
       }
-    } else {
-      // when in only move map mode, set timer again.
+
+      removeFeature(feature, setTimerAfterConcurrentsComplete);
+    }
+  }
+
+  function run_modifyFeature() {
+    for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
+      var feature = getRandomfeature();
+      var view = getViewFromFeature(feature);
+
+      // only move to the location of the first feature we are trying to remove
+      if (i === 0) {
+        moveToView(view);
+      }
+
+      modifyFeature(feature, setTimerAfterConcurrentsComplete);
+    }
+  }
+
+  function setTimerAfterConcurrentsComplete() {
+    concurrentCompletedCount += 1;
+    // once the number of completed concurrent runs complete, set timer
+    if (concurrentCompletedCount >= config.createFeatureConcurrentCount) {
+      concurrentCompletedCount = 0;
       setTimer();
-      console.log('---- move map @ ' + dateLastRun + '. runCounter: ' + runCounter + ', view: ', view);
     }
   }
 
@@ -113,7 +185,29 @@ var TestModule = (function(){
     }
   }
 
+  function moveToView(view){
+    var pan = ol.animation.pan({source: mapService.map.getView().getView2D().getCenter()});
+    var zoom = ol.animation.zoom({resolution: mapService.map.getView().getView2D().getResolution()});
+    mapService.map.beforeRender(pan, zoom);
+    mapService.map.getView().getView2D().setCenter(view.center);
+    mapService.map.getView().getView2D().setZoom(view.zoom);
+  }
+
   function getWfsData(lon, lat, date) {
+    var attributesXML = '';
+
+    for(var attribute in config.attributes) {
+      var value = config.attributes[attribute];
+      // if the attribute value starts with 'eval(' evaluate the string. lat, lon, date, will resolve so will any thing
+      // else visible to the scope
+      //TODO: test eval support
+      if (value.indexOf('eval(') === 0) {
+        value = value.replace(/"/g, '\\"');
+        value = eval(value);
+      }
+      attributesXML += '<feature:' + attribute + '>' + value + '</feature:' + attribute + '>';
+    }
+
     return '' +
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
@@ -127,11 +221,18 @@ var TestModule = (function(){
         '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
         '</gml:Point>' +
         '</feature:' + config.geomAttributeName + '>' +
-        '<feature:' + config.attributeName + '>' + config.attributeValuePrefix + ' runCounter: ' +
-        runCounter + ' ' + date + '</feature:' + config.attributeName + '>' +
+        attributesXML +
         '</feature:' + config.layerName + '>' +
         '</wfs:Insert>' +
         '</wfs:Transaction>';
+  }
+
+  function removeFeature(feature, callback_success, callback_error) {
+    //TODO: remove the specified feature. MUST call callback_success when operation completes successfully
+  }
+
+  function modifyFeature(feature, callback_success, callback_error) {
+    //TODO: remove the specified feature. MUST call callback_success when operation completes successfully
   }
 
   function createFeature(lon, lat, callback_success, callback_error) {
