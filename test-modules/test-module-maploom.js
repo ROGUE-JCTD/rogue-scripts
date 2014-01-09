@@ -514,6 +514,9 @@ var TestModule = (function() {
     if (point.getCoordinates()[0] > config.lonMax || point.getCoordinates()[0] < config.lonMin ||
         point.getCoordinates()[1] > config.latMax || point.getCoordinates()[1] < config.latMin) {
       console.log('====[ Could not update feature, new position went out of bounds');
+      if (callback_success) {
+        callback_success();
+      }
       return;
     }
     var transform = ol.proj.getTransform(projection4326, projectionMap);
