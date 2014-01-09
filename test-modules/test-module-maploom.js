@@ -34,19 +34,20 @@ var TestModule = (function(){
     // attributes and values to set them to when creating a feature
     attributes: {
       evento: 'otro', // nino_perdido, accidente_ambulancia, incidente_de_trafico, danos_y_perjuicios, otro
-      comentarios: 'eval("TestModule" + " runCounter: " + runCounter + " date: " + date)'
+      fotos: 'eval(JSON.stringify(getRandomPicsArray()))',  // generate a random array of pics and stringify it
+      comentarios: 'eval("server1 " + " runCounter: " + runCounter + " date: " + date)'
     },
 
     // list of available operations and a corresponding weight. The higher the weight relative to the other available
     // operations, the more often it will tend to get selected.
     operations: {
-      createFeature: 0,
+      createFeature: 10,
       removeFeature: 0,
       modifyFeature: 0,
-      moveView: 10
+      moveView: 0
     },
 
-    // when the camera moves from point a to be, animate it or do and abrupt jump.
+    // when the camera moves from point a to b, animate it or do and abrupt jump.
     // animated move looks more pleasant and also more heavily tasks the server with WMS requests. When these cases
     // are not of advantage or cause a disadvantage, you may disable animation.
     moveToViewAnimate: false,
@@ -64,8 +65,14 @@ var TestModule = (function(){
   var dateLastRun = null;
   var concurrentCompletedCount = 0;
 
+  // returns floating point number. min inclusive, max exclusive
   function getRandomBetween(min, max) {
     return Math.random() * (max - min) + min;
+  }
+
+  // returns an integer. min inclusive, max exclusive
+  function getRandomIntegerBetween(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
   }
 
   function getRandomView() {
@@ -90,8 +97,26 @@ var TestModule = (function(){
     //TODO: given a feature, return a view object with structure similar to what getRandomView returns
   }
 
+  function getRandomPicsArray() {
+    //TODO: select a random pic from teh ones available on the file-service and return it
+    var pics = [];
+
+    // 0 through 4 pics
+    var picsLength = getRandomIntegerBetween(0, 5);
+
+    if (picsLength > 0) {
+      for (var i = 0; i < picsLength; i++) {
+        //TODO: randomly get a pic name from available pics in the file-service
+        var picName = '07869daf87e9d2e300532dac492a2cd8727a2465.jpg';
+        pics.push(picName);
+      }
+    }
+
+    return pics;
+  }
+
   // randomly select an operation based on the user specified weights of the operations
-  function selectOperation() {
+  function getRandomOperation() {
     var pointSum = 0;
 
     for (var op in config.operations) {
@@ -110,14 +135,14 @@ var TestModule = (function(){
       }
     }
 
-    alert ('error: selectOperation failed! should never hit this');
+    alert ('error: getRandomOperation failed! should never hit this');
   }
 
   function run() {
     runCounter += 1;
     dateLastRun = new Date();
 
-    var op = selectOperation();
+    var op = getRandomOperation();
 
     // call the selected operation's run function
     var operationFunctionName = 'run_' + op;
@@ -253,7 +278,8 @@ var TestModule = (function(){
     var timeInMillies = Date.now();
 
     var url = '/geoserver/wfs/WfsDispatcher';
-    httpService.post(url, getWfsData(lon, lat, dateLastRun), {headers: config.headerData})
+    var wfsData = getWfsData(lon, lat, dateLastRun);
+    httpService.post(url, wfsData, {headers: config.headerData})
         .success(function(data, status, headers, config) {
           if (status === 200) {
 
