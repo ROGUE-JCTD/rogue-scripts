@@ -34,20 +34,25 @@ var TestModule = (function(){
     // attributes and values to set them to when creating a feature
     attributes: {
       evento: 'otro', // nino_perdido, accidente_ambulancia, incidente_de_trafico, danos_y_perjuicios, otro
-      comentarios: 'yoyo' //'eval("TestModule" + " runCounter: " + runCounter + " date: " + date)'
+      comentarios: 'eval("TestModule" + " runCounter: " + runCounter + " date: " + date)'
     },
-
-    // if teh geometry attribute type is not geom, it can be set here. for example, 'the_geom'
-    geomAttributeName: 'geom',
 
     // list of available operations and a corresponding weight. The higher the weight relative to the other available
     // operations, the more often it will tend to get selected.
     operations: {
-      createFeature: 50,
+      createFeature: 0,
       removeFeature: 0,
       modifyFeature: 0,
       moveView: 10
-    }
+    },
+
+    // when the camera moves from point a to be, animate it or do and abrupt jump.
+    // animated move looks more pleasant and also more heavily tasks the server with WMS requests. When these cases
+    // are not of advantage or cause a disadvantage, you may disable animation.
+    moveToViewAnimate: false,
+
+    // if the geometry attribute type is not geom, it can be set here. for example, 'the_geom'
+    geomAttributeName: 'geom'
   };
 
   var mapService = angular.element('html').injector().get('mapService');
@@ -186,9 +191,12 @@ var TestModule = (function(){
   }
 
   function moveToView(view){
-    var pan = ol.animation.pan({source: mapService.map.getView().getView2D().getCenter()});
-    var zoom = ol.animation.zoom({resolution: mapService.map.getView().getView2D().getResolution()});
-    mapService.map.beforeRender(pan, zoom);
+    if (config.moveToViewAnimate) {
+      var pan = ol.animation.pan({source: mapService.map.getView().getView2D().getCenter()});
+      var zoom = ol.animation.zoom({resolution: mapService.map.getView().getView2D().getResolution()});
+      mapService.map.beforeRender(pan, zoom);
+    }
+
     mapService.map.getView().getView2D().setCenter(view.center);
     mapService.map.getView().getView2D().setZoom(view.zoom);
   }
@@ -200,9 +208,8 @@ var TestModule = (function(){
       var value = config.attributes[attribute];
       // if the attribute value starts with 'eval(' evaluate the string. lat, lon, date, will resolve so will any thing
       // else visible to the scope
-      //TODO: test eval support
       if (value.indexOf('eval(') === 0) {
-        value = value.replace(/"/g, '\\"');
+        value = value.substring('eval('.length, value.length-1);
         value = eval(value);
       }
       attributesXML += '<feature:' + attribute + '>' + value + '</feature:' + attribute + '>';
