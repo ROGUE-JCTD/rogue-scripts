@@ -1,6 +1,6 @@
 "use strict";jQuery.base64=(function($){var _PADCHAR="=",_ALPHA="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",_VERSION="1.0";function _getbyte64(s,i){var idx=_ALPHA.indexOf(s.charAt(i));if(idx===-1){throw"Cannot decode base64"}return idx}function _decode(s){var pads=0,i,b10,imax=s.length,x=[];s=String(s);if(imax===0){return s}if(imax%4!==0){throw"Cannot decode base64"}if(s.charAt(imax-1)===_PADCHAR){pads=1;if(s.charAt(imax-2)===_PADCHAR){pads=2}imax-=4}for(i=0;i<imax;i+=4){b10=(_getbyte64(s,i)<<18)|(_getbyte64(s,i+1)<<12)|(_getbyte64(s,i+2)<<6)|_getbyte64(s,i+3);x.push(String.fromCharCode(b10>>16,(b10>>8)&255,b10&255))}switch(pads){case 1:b10=(_getbyte64(s,i)<<18)|(_getbyte64(s,i+1)<<12)|(_getbyte64(s,i+2)<<6);x.push(String.fromCharCode(b10>>16,(b10>>8)&255));break;case 2:b10=(_getbyte64(s,i)<<18)|(_getbyte64(s,i+1)<<12);x.push(String.fromCharCode(b10>>16));break}return x.join("")}function _getbyte(s,i){var x=s.charCodeAt(i);if(x>255){throw"INVALID_CHARACTER_ERR: DOM Exception 5"}return x}function _encode(s){if(arguments.length!==1){throw"SyntaxError: exactly one argument required"}s=String(s);var i,b10,x=[],imax=s.length-s.length%3;if(s.length===0){return s}for(i=0;i<imax;i+=3){b10=(_getbyte(s,i)<<16)|(_getbyte(s,i+1)<<8)|_getbyte(s,i+2);x.push(_ALPHA.charAt(b10>>18));x.push(_ALPHA.charAt((b10>>12)&63));x.push(_ALPHA.charAt((b10>>6)&63));x.push(_ALPHA.charAt(b10&63))}switch(s.length-imax){case 1:b10=_getbyte(s,i)<<16;x.push(_ALPHA.charAt(b10>>18)+_ALPHA.charAt((b10>>12)&63)+_PADCHAR+_PADCHAR);break;case 2:b10=(_getbyte(s,i)<<16)|(_getbyte(s,i+1)<<8);x.push(_ALPHA.charAt(b10>>18)+_ALPHA.charAt((b10>>12)&63)+_ALPHA.charAt((b10>>6)&63)+_PADCHAR);break}return x.join("")}return{decode:_decode,encode:_encode,VERSION:_VERSION}}(jQuery));
 
-var TestModule = (function(){
+var TestModule = (function() {
 
   var config = {
 
@@ -34,6 +34,8 @@ var TestModule = (function(){
     // name of the layer to to which features will be added
     layerName: 'canchas_de_futbol', //'incidentes_copeco',
 
+    workspaceName: 'geonode',
+
     // name of the column to which a log msg will be written to when a feature is placed
     attributeName: 'comentarios',
 
@@ -51,6 +53,7 @@ var TestModule = (function(){
   var projectionMap = mapService.map.getView().getView2D().getProjection().getCode();
   var runCounter = 0;
   var dateLastRun = null;
+  var featureList = [];
 
   function getRandomBetween(min, max) {
     return Math.random() * (max - min) + min;
@@ -81,18 +84,18 @@ var TestModule = (function(){
     mapService.map.getView().getView2D().setCenter(view.center);
     mapService.map.getView().getView2D().setZoom(view.zoom);
 
+    var concurrentCompletedCount = 0;
+
+    var successFunc = function() {
+      concurrentCompletedCount += 1;
+      // once the number of completed concurrent runs complete, set timer
+      if (concurrentCompletedCount >= config.createFeatureConcurrentCount) {
+        setTimer();
+      }
+    };
+    var i;
     if (config.createFeature) {
-      var concurrentCompletedCount = 0;
-
-      var successFunc = function() {
-        concurrentCompletedCount += 1;
-        // once the number of completed concurrent runs complete, set timer
-        if (concurrentCompletedCount >= config.createFeatureConcurrentCount) {
-          setTimer();
-        }
-      };
-
-      for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
+      for (i = 0; i < config.createFeatureConcurrentCount; i += 1) {
         // if we are creating features, only set timer after previous create completes
         createFeature(view.center[0], view.center[1], successFunc);
       }
@@ -113,7 +116,7 @@ var TestModule = (function(){
     }
   }
 
-  function getWfsData(lon, lat, date) {
+  function getInsertWfsData(lon, lat, date) {
     return '' +
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
@@ -134,6 +137,75 @@ var TestModule = (function(){
         '</wfs:Transaction>';
   }
 
+  function getRemoveWfsData() {
+    return '' +
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+        'service= "WFS" version="1.1.0" ' +
+        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
+        '<wfs:Delete xmlns:feature="http://www.geonode.org/" typeName="' +
+        config.workspaceName + ':' + config.layerName + '">' +
+        '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
+        '<ogc:FeatureId fid="' + featureList.pop().fid + '" />' +
+        '</ogc:Filter>' +
+        '</wfs:Delete>' +
+        '</wfs:Transaction>';
+  }
+
+  function getUpdateWfsData(lon, lat) {
+    return '' +
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+        'service= "WFS" version="1.1.0" ' +
+        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
+        '<wfs:Update xmlns:feature="http://www.geonode.org/" typeName="' +
+        config.workspaceName + ':' + config.layerName + '">' +
+        '<wfs:Property>' +
+        '<wfs:Name>' + config.geomAttributeName +
+        '</wfs:Name>' +
+        '<wfs:Value>' +
+        '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
+        '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
+        '</gml:Point>' +
+        '</wfs:Value>' +
+        '</wfs:Property>' +
+        '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
+        '<ogc:FeatureId fid="' + featureList.pop().fid + '" />' +
+        '</ogc:Filter>' +
+        '</wfs:Update>' +
+        '</wfs:Transaction>';
+  }
+
+  var forEachArrayish = function(arrayish, funct) {
+    if (goog.isArray(arrayish)) {
+      goog.array.forEach(arrayish, funct);
+    } else {
+      funct(arrayish);
+    }
+  };
+
+  function getAllFeatures() {
+    var url = '/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=' + config.workspaceName + ':' +
+        config.layerName;
+
+    httpService.get(url).then(function(response) {
+      var x2js = new X2JS();
+      var json = x2js.xml_str2json(response.data);
+      forEachArrayish(json.FeatureCollection.member, function(feature) {
+        featureList.push({
+          'fid': feature[config.layerName]['_gml:id'],
+          'geom': {
+            'srsName': feature[config.layerName][config.geomAttributeName].Point._srsName,
+            'coords': feature[config.layerName][config.geomAttributeName].Point.pos.__text.split(' ')
+          }
+        });
+      });
+      //run();
+    });
+  }
+
   function createFeature(lon, lat, callback_success, callback_error) {
     if (config.username && config.password && (typeof config.headerData === 'undefined')) {
       config.headerData = {
@@ -145,7 +217,7 @@ var TestModule = (function(){
     var timeInMillies = Date.now();
 
     var url = '/geoserver/wfs/WfsDispatcher';
-    httpService.post(url, getWfsData(lon, lat, dateLastRun), {headers: config.headerData})
+    httpService.post(url, getInsertWfsData(lon, lat, dateLastRun), {headers: config.headerData})
         .success(function(data, status, headers, config) {
           if (status === 200) {
 
@@ -153,7 +225,15 @@ var TestModule = (function(){
             if (data.indexOf('<wfs:totalInserted>1</wfs:totalInserted>') !== -1) {
               console.log('---- createFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
-
+              var x2js = new X2JS();
+              var json = x2js.xml_str2json(data);
+              featureList.push({
+                'fid': json.TransactionResponse.InsertResults.Feature.FeatureId._fid,
+                'geom': {
+                  'srsName': projectionMap,
+                  'coords': [lon, lat]
+                }
+              });
               if (callback_success) {
                 callback_success();
               }
@@ -196,6 +276,127 @@ var TestModule = (function(){
         });
   }
 
+  function removeFeature(callback_success, callback_error) {
+    if (config.username && config.password && (typeof config.headerData === 'undefined')) {
+      config.headerData = {
+        'Content-Type': 'text/xml;charset=utf-8',
+        'Authorization': 'Basic ' + $.base64.encode(config.username + ':' + config.password)
+      };
+    }
+
+    var timeInMillies = Date.now();
+
+    var url = '/geoserver/wfs/WfsDispatcher';
+    httpService.post(url, getRemoveWfsData(), {headers: config.headerData})
+        .success(function(data, status, headers, config) {
+          if (status === 200) {
+
+            // if a feature was inserted, post succeeded
+            if (data.indexOf('<wfs:totalDeleted>1</wfs:totalDeleted>') !== -1) {
+              console.log('---- deletedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
+                  ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
+              if (callback_success) {
+                callback_success();
+              }
+            } else if (data.indexOf('ExceptionReport') !== -1) {
+              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data);
+              p.stop();
+              var begin = data.indexOf('<ows:ExceptionText>');
+              var end = data.indexOf('</ows:ExceptionText>');
+              var exceptionText = '';
+              if (begin !== -1 && end !== -1) {
+                exceptionText = data.substring(begin + '<ows:ExceptionText>'.length, end);
+              }
+              alert('Wfs-T Exception! See console for response. ExceptionText: ' + exceptionText);
+              if (callback_error) {
+                callback_error();
+              }
+            } else {
+              console.log('====[ TestModule. Unknown Status or Error #1: ', data);
+              p.stop();
+              alert('Wfs-T Unknown Status or Error. See console for response.');
+              if (callback_error) {
+                callback_error();
+              }
+            }
+          } else if (status === 401) {
+            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data);
+            alert('TestModule. Wfs-T, unauthorized. Verify username: ' + config.username +
+                ', password: ' + config.password);
+            if (callback_error) {
+              callback_error();
+            }
+          } else {
+            console.log('====[ TestModule. Unknown Status or Error #2: ', data);
+            p.stop();
+            alert('Wfs-T Unknown Status or Error. See console for response.');
+            if (callback_error) {
+              callback_error();
+            }
+          }
+        });
+  }
+
+  function updateFeature(lon, lat, callback_success, callback_error) {
+    if (config.username && config.password && (typeof config.headerData === 'undefined')) {
+      config.headerData = {
+        'Content-Type': 'text/xml;charset=utf-8',
+        'Authorization': 'Basic ' + $.base64.encode(config.username + ':' + config.password)
+      };
+    }
+
+    var timeInMillies = Date.now();
+
+    var url = '/geoserver/wfs/WfsDispatcher';
+    httpService.post(url, getUpdateWfsData(lon, lat), {headers: config.headerData})
+        .success(function(data, status, headers, config) {
+          if (status === 200) {
+
+            // if a feature was inserted, post succeeded
+            if (data.indexOf('<wfs:totalUpdated>1</wfs:totalUpdated>') !== -1) {
+              console.log('---- updatedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
+                  ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
+              if (callback_success) {
+                callback_success();
+              }
+            } else if (data.indexOf('ExceptionReport') !== -1) {
+              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data);
+              p.stop();
+              var begin = data.indexOf('<ows:ExceptionText>');
+              var end = data.indexOf('</ows:ExceptionText>');
+              var exceptionText = '';
+              if (begin !== -1 && end !== -1) {
+                exceptionText = data.substring(begin + '<ows:ExceptionText>'.length, end);
+              }
+              alert('Wfs-T Exception! See console for response. ExceptionText: ' + exceptionText);
+              if (callback_error) {
+                callback_error();
+              }
+            } else {
+              console.log('====[ TestModule. Unknown Status or Error #1: ', data);
+              p.stop();
+              alert('Wfs-T Unknown Status or Error. See console for response.');
+              if (callback_error) {
+                callback_error();
+              }
+            }
+          } else if (status === 401) {
+            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data);
+            alert('TestModule. Wfs-T, unauthorized. Verify username: ' + config.username +
+                ', password: ' + config.password);
+            if (callback_error) {
+              callback_error();
+            }
+          } else {
+            console.log('====[ TestModule. Unknown Status or Error #2: ', data);
+            p.stop();
+            alert('Wfs-T Unknown Status or Error. See console for response.');
+            if (callback_error) {
+              callback_error();
+            }
+          }
+        });
+  }
 
   var p = {};
 
@@ -209,7 +410,7 @@ var TestModule = (function(){
     }
 
     console.log('====[ startTest. frequency: ', config.frequency, ', config: ', config);
-    run();
+    getAllFeatures();
   };
 
   p.stop = function() {
