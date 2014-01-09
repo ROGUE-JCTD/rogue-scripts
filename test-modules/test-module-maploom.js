@@ -42,9 +42,9 @@ var TestModule = (function() {
     // list of available operations and a corresponding weight. The higher the weight relative to the other available
     // operations, the more often it will tend to get selected.
     operations: {
-      createFeature: 10,
-      removeFeature: 0,
-      modifyFeature: 0,
+      createFeature: 5,
+      removeFeature: 5,
+      modifyFeature: 5,
       moveView: 0
     },
 
@@ -80,7 +80,7 @@ var TestModule = (function() {
   function getRandomView() {
     var lat = getRandomBetween(config.latMin, config.latMax);
     var lon = getRandomBetween(config.lonMin, config.lonMax);
-    var zoom = Math.floor(getRandomBetween(config.zoomMin, config.zoomMax));
+    var zoom = getRandomIntegerBetween(config.zoomMin, config.zoomMax);
     var point = new ol.geom.Point([lon, lat]);
     var transform = ol.proj.getTransform(projection4326, projectionMap);
     point.transform(transform);
@@ -93,8 +93,11 @@ var TestModule = (function() {
 
   function getViewFromFeature(feature) {
     //TODO: make sure projection is correct
+    var point = new ol.geom.Point($.extend(true, [], feature.geom.coords));
+    var transform = ol.proj.getTransform(projection4326, projectionMap);
+    point.transform(transform);
     return {
-      center: feature.geom.coords(),
+      center: point.getCoordinates(),
       zoom: getRandomIntegerBetween(config.zoomMin, config.zoomMax)
     };
   }
@@ -137,7 +140,7 @@ var TestModule = (function() {
       }
     }
 
-    alert ('error: getRandomOperation failed! should never hit this');
+    alert('error: getRandomOperation failed! should never hit this');
   }
 
   function run() {
@@ -217,7 +220,7 @@ var TestModule = (function() {
     }
   }
 
-  function moveToView(view){
+  function moveToView(view) {
     if (config.moveToViewAnimate) {
       var pan = ol.animation.pan({source: mapService.map.getView().getView2D().getCenter()});
       var zoom = ol.animation.zoom({resolution: mapService.map.getView().getView2D().getResolution()});
@@ -231,12 +234,12 @@ var TestModule = (function() {
   function getInsertWfsData(lon, lat) {
     var attributesXML = '';
 
-    for(var attribute in config.attributes) {
+    for (var attribute in config.attributes) {
       var value = config.attributes[attribute];
       // if the attribute value starts with 'eval(' evaluate the string. lat, lon will resolve so will any thing
       // else visible to the scope
       if (value.indexOf('eval(') === 0) {
-        value = value.substring('eval('.length, value.length-1);
+        value = value.substring('eval('.length, value.length - 1);
         value = eval(value);
       }
       attributesXML += '<feature:' + attribute + '>' + value + '</feature:' + attribute + '>';
@@ -246,9 +249,11 @@ var TestModule = (function() {
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service= "WFS" version="1.1.0" ' +
+        'service= "WFS" version="1.1.0" handle="' +
+        '{&quot;' + config.layerName + '&quot;:{&quot;added&quot;:1}}" ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
-        '<wfs:Insert>' +
+        '<wfs:Insert handle="' +
+        '{&quot;' + config.layerName + '&quot;:{&quot;added&quot;:1}}">' +
         '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
         '<feature:' + config.geomAttributeName + '>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
@@ -266,9 +271,11 @@ var TestModule = (function() {
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service= "WFS" version="1.1.0" ' +
+        'service= "WFS" version="1.1.0" handle="' +
+        '{&quot;' + config.layerName + '&quot;:{&quot;removed&quot;:1}}" ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
-        '<wfs:Delete xmlns:feature="http://www.geonode.org/" typeName="' +
+        '<wfs:Delete xmlns:feature="http://www.geonode.org/"  handle="' +
+        '{&quot;' + config.layerName + '&quot;:{&quot;removed&quot;:1}}" typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
         '<ogc:FeatureId fid="' + feature.fid + '"/>' +
@@ -277,21 +284,23 @@ var TestModule = (function() {
         '</wfs:Transaction>';
   }
 
-  function getUpdateWfsData(feature) {
+  function getUpdateWfsData(feature, newPosition) {
     return '' +
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service= "WFS" version="1.1.0" ' +
+        'service= "WFS" version="1.1.0" handle="' +
+        '{&quot;' + config.layerName + '&quot;:{&quot;modified&quot;:1}}" ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
-        '<wfs:Update xmlns:feature="http://www.geonode.org/" typeName="' +
+        '<wfs:Update xmlns:feature="http://www.geonode.org/" handle="' +
+        '{&quot;' + config.layerName + '&quot;:{&quot;modified&quot;:1}}" typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<wfs:Property>' +
         '<wfs:Name>' + config.geomAttributeName +
         '</wfs:Name>' +
         '<wfs:Value>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
-        '<gml:pos>' + feature.geom.coords[0] + ' ' + feature.geom.coords[1] + '</gml:pos>' +
+        '<gml:pos>' + newPosition[0] + ' ' + newPosition[1] + '</gml:pos>' +
         '</gml:Point>' +
         '</wfs:Value>' +
         '</wfs:Property>' +
@@ -327,12 +336,19 @@ var TestModule = (function() {
       var json = x2js.xml_str2json(response.data);
       forEachArrayish(json.FeatureCollection.member, function(feature) {
         var srs = feature[config.layerName][config.geomAttributeName].Point._srsName.split(':');
+        srs = 'EPSG:' + srs[srs.length - 1];
         var coords = feature[config.layerName][config.geomAttributeName].Point.pos.__text.split(' ');
+        coords = [parseFloat(coords[1]), parseFloat(coords[0])];
+        if (srs !== projection4326) {
+          var point = new ol.geom.Point(coords);
+          var transform = ol.proj.getTransform(srs, projection4326);
+          point.transform(transform);
+        }
         featureList.push({
           'fid': feature[config.layerName]['_gml:id'],
           'geom': {
-            'srsName': 'EPSG:' + srs[srs.length - 1],
-            'coords': [parseFloat(coords[1]), parseFloat(coords[0])]
+            'srsName': projection4326,
+            'coords': coords
           }
         });
       });
@@ -363,11 +379,14 @@ var TestModule = (function() {
                   ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
               var x2js = new X2JS();
               var json = x2js.xml_str2json(data);
+              var point = new ol.geom.Point([lon, lat]);
+              var transform = ol.proj.getTransform(projectionMap, projection4326);
+              point.transform(transform);
               featureList.push({
                 'fid': json.TransactionResponse.InsertResults.Feature.FeatureId._fid,
                 'geom': {
-                  'srsName': projectionMap,
-                  'coords': [lon, lat]
+                  'srsName': projection4326,
+                  'coords': point.getCoordinates()
                 }
               });
               if (callback_success) {
@@ -484,31 +503,23 @@ var TestModule = (function() {
     var timeInMillies = Date.now();
 
     var url = '/geoserver/wfs/WfsDispatcher';
-    var point = null;
-    var transform;
     if (feature.geom.srsName !== projection4326) {
-      point = new ol.geom.Point(feature.geom.coords);
-      transform = ol.proj.getTransform(feature.geom.srsName, projection4326);
-      point.transform(transform);
+      console.log('====[ Somehow this feature has the wrong projection', feature.geom.srsName);
     }
+    var point = new ol.geom.Point($.extend(true, [], feature.geom.coords));
     var randomLat = getRandomBetween(-1.0, 1.0);
     var randomLon = getRandomBetween(-1.0, 1.0);
-    feature.geom.coords[0] += randomLon;
-    feature.geom.coords[1] += randomLat;
-    if (feature.geom.coords[0] > config.lonMax || feature.geom.coords[0] < config.lonMin ||
-        feature.geom.coords[1] > config.latMax || feature.geom.coords[1] < config.latMin) {
-      feature.geom.coords[0] -= randomLon;
-      feature.geom.coords[1] -= randomLat;
+    point.getCoordinates()[0] += randomLon;
+    point.getCoordinates()[1] += randomLat;
+    if (point.getCoordinates()[0] > config.lonMax || point.getCoordinates()[0] < config.lonMin ||
+        point.getCoordinates()[1] > config.latMax || point.getCoordinates()[1] < config.latMin) {
       console.log('====[ Could not update feature, new position went out of bounds');
       return;
     }
-    if (!goog.isDefAndNotNull(point)) {
-      point = new ol.geom.Point(feature.geom.coords);
-    }
-    transform = ol.proj.getTransform(projection4326, projectionMap);
+    var transform = ol.proj.getTransform(projection4326, projectionMap);
     point.transform(transform);
 
-    httpService.post(url, getUpdateWfsData(feature), {headers: config.headerData})
+    httpService.post(url, getUpdateWfsData(feature, point.getCoordinates()), {headers: config.headerData})
         .success(function(data, status, headers, config) {
           if (status === 200) {
 
@@ -516,8 +527,9 @@ var TestModule = (function() {
             if (data.indexOf('<wfs:totalUpdated>1</wfs:totalUpdated>') !== -1) {
               console.log('---- updatedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
-              transform = ol.proj.getTransform(projectionMap, feature.geom.srsName);
+              transform = ol.proj.getTransform(projectionMap, projection4326);
               point.transform(transform);
+              feature.geom.coords = point.getCoordinates();
               if (callback_success) {
                 callback_success();
               }
