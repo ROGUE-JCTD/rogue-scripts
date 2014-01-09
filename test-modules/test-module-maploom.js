@@ -147,13 +147,13 @@ var TestModule = (function() {
         '<wfs:Delete xmlns:feature="http://www.geonode.org/" typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
-        '<ogc:FeatureId fid="' + featureList.pop().fid + '" />' +
+        '<ogc:FeatureId fid="' + getRandomFeature(true).fid + '"/>' +
         '</ogc:Filter>' +
         '</wfs:Delete>' +
         '</wfs:Transaction>';
   }
 
-  function getUpdateWfsData(lon, lat) {
+  function getUpdateWfsData(feature) {
     return '' +
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
@@ -167,12 +167,12 @@ var TestModule = (function() {
         '</wfs:Name>' +
         '<wfs:Value>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
-        '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
+        '<gml:pos>' + feature.geom.coords[0] + ' ' + feature.geom.coords[1] + '</gml:pos>' +
         '</gml:Point>' +
         '</wfs:Value>' +
         '</wfs:Property>' +
         '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
-        '<ogc:FeatureId fid="' + featureList.pop().fid + '" />' +
+        '<ogc:FeatureId fid="' + feature.fid + '" />' +
         '</ogc:Filter>' +
         '</wfs:Update>' +
         '</wfs:Transaction>';
@@ -186,6 +186,14 @@ var TestModule = (function() {
     }
   };
 
+  function getRandomFeature(remove) {
+    var index = Math.floor(getRandomBetween(0, featureList.length));
+    if (remove) {
+      return featureList.splice(index, 1)[0];
+    }
+    return featureList[index];
+  }
+
   function getAllFeatures() {
     var url = '/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=' + config.workspaceName + ':' +
         config.layerName;
@@ -194,15 +202,17 @@ var TestModule = (function() {
       var x2js = new X2JS();
       var json = x2js.xml_str2json(response.data);
       forEachArrayish(json.FeatureCollection.member, function(feature) {
+        var srs = feature[config.layerName][config.geomAttributeName].Point._srsName.split(':');
+        var coords = feature[config.layerName][config.geomAttributeName].Point.pos.__text.split(' ');
         featureList.push({
           'fid': feature[config.layerName]['_gml:id'],
           'geom': {
-            'srsName': feature[config.layerName][config.geomAttributeName].Point._srsName,
-            'coords': feature[config.layerName][config.geomAttributeName].Point.pos.__text.split(' ')
+            'srsName': 'EPSG:' + srs[srs.length - 1],
+            'coords': [parseFloat(coords[1]), parseFloat(coords[0])]
           }
         });
       });
-      //run();
+      run();
     });
   }
 
@@ -337,7 +347,7 @@ var TestModule = (function() {
         });
   }
 
-  function updateFeature(lon, lat, callback_success, callback_error) {
+  function updateFeature(callback_success, callback_error) {
     if (config.username && config.password && (typeof config.headerData === 'undefined')) {
       config.headerData = {
         'Content-Type': 'text/xml;charset=utf-8',
@@ -348,7 +358,32 @@ var TestModule = (function() {
     var timeInMillies = Date.now();
 
     var url = '/geoserver/wfs/WfsDispatcher';
-    httpService.post(url, getUpdateWfsData(lon, lat), {headers: config.headerData})
+    var feature = getRandomFeature();
+    var point = null;
+    var transform;
+    if (feature.geom.srsName !== projection4326) {
+      point = new ol.geom.Point(feature.geom.coords);
+      transform = ol.proj.getTransform(feature.geom.srsName, projection4326);
+      point.transform(transform);
+    }
+    var randomLat = getRandomBetween(-1.0, 1.0);
+    var randomLon = getRandomBetween(-1.0, 1.0);
+    feature.geom.coords[0] += randomLon;
+    feature.geom.coords[1] += randomLat;
+    if (feature.geom.coords[0] > config.lonMax || feature.geom.coords[0] < config.lonMin ||
+        feature.geom.coords[1] > config.latMax || feature.geom.coords[1] < config.latMin) {
+      feature.geom.coords[0] -= randomLon;
+      feature.geom.coords[1] -= randomLat;
+      console.log('====[ Could not update feature, new position went out of bounds');
+      return;
+    }
+    if (!goog.isDefAndNotNull(point)) {
+      point = new ol.geom.Point(feature.geom.coords);
+    }
+    transform = ol.proj.getTransform(projection4326, projectionMap);
+    point.transform(transform);
+
+    httpService.post(url, getUpdateWfsData(feature), {headers: config.headerData})
         .success(function(data, status, headers, config) {
           if (status === 200) {
 
@@ -356,6 +391,8 @@ var TestModule = (function() {
             if (data.indexOf('<wfs:totalUpdated>1</wfs:totalUpdated>') !== -1) {
               console.log('---- updatedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
+              transform = ol.proj.getTransform(projectionMap, feature.geom.srsName);
+              point.transform(transform);
               if (callback_success) {
                 callback_success();
               }
