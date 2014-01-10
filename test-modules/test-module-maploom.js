@@ -53,6 +53,8 @@ var TestModule = (function() {
     // are not of advantage or cause a disadvantage, you may disable animation.
     moveToViewAnimate: false,
 
+    //TODO: Add a no conflict option
+
     // if the geometry attribute type is not geom, it can be set here. for example, 'the_geom'
     geomAttributeName: 'geom'
   };
@@ -92,7 +94,6 @@ var TestModule = (function() {
   }
 
   function getViewFromFeature(feature) {
-    //TODO: make sure projection is correct
     var point = new ol.geom.Point($.extend(true, [], feature.geom.coords));
     var transform = ol.proj.getTransform(projection4326, projectionMap);
     point.transform(transform);
@@ -176,6 +177,10 @@ var TestModule = (function() {
   function run_removeFeature() {
     for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
       var feature = getRandomFeature(true);
+      if (!goog.isDefAndNotNull(feature)) {
+        setTimerAfterConcurrentsComplete();
+        continue;
+      }
       var view = getViewFromFeature(feature);
 
       // only move to the location of the first feature we are trying to remove
@@ -190,6 +195,10 @@ var TestModule = (function() {
   function run_modifyFeature() {
     for (var i = 0; i < config.createFeatureConcurrentCount; i += 1) {
       var feature = getRandomFeature();
+      if (!goog.isDefAndNotNull(feature)) {
+        setTimerAfterConcurrentsComplete();
+        continue;
+      }
       var view = getViewFromFeature(feature);
 
       // only move to the location of the first feature we are trying to remove
@@ -334,25 +343,26 @@ var TestModule = (function() {
     httpService.get(url).then(function(response) {
       var x2js = new X2JS();
       var json = x2js.xml_str2json(response.data);
-      forEachArrayish(json.FeatureCollection.member, function(feature) {
-        var srs = feature[config.layerName][config.geomAttributeName].Point._srsName.split(':');
-        srs = 'EPSG:' + srs[srs.length - 1];
-        var coords = feature[config.layerName][config.geomAttributeName].Point.pos.__text.split(' ');
-        coords = [parseFloat(coords[1]), parseFloat(coords[0])];
-        if (srs !== projection4326) {
-          var point = new ol.geom.Point(coords);
-          var transform = ol.proj.getTransform(srs, projection4326);
-          point.transform(transform);
-        }
-        featureList.push({
-          'fid': feature[config.layerName]['_gml:id'],
-          'geom': {
-            'srsName': projection4326,
-            'coords': coords
+      if (goog.isDefAndNotNull(json.FeatureCollection.member)) {
+        forEachArrayish(json.FeatureCollection.member, function(feature) {
+          var srs = feature[config.layerName][config.geomAttributeName].Point._srsName.split(':');
+          srs = 'EPSG:' + srs[srs.length - 1];
+          var coords = feature[config.layerName][config.geomAttributeName].Point.pos.__text.split(' ');
+          coords = [parseFloat(coords[1]), parseFloat(coords[0])];
+          if (srs !== projection4326) {
+            var point = new ol.geom.Point(coords);
+            var transform = ol.proj.getTransform(srs, projection4326);
+            point.transform(transform);
           }
+          featureList.push({
+            'fid': feature[config.layerName]['_gml:id'],
+            'geom': {
+              'srsName': projection4326,
+              'coords': coords
+            }
+          });
         });
-      });
-
+      }
       //-- finally start by calling the run functions
       run();
     });
@@ -376,7 +386,7 @@ var TestModule = (function() {
             // if a feature was inserted, post succeeded
             if (data.indexOf('<wfs:totalInserted>1</wfs:totalInserted>') !== -1) {
               console.log('---- createFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
-                  ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
+                  ' post duration: ', (Date.now() - timeInMillies));
               var x2js = new X2JS();
               var json = x2js.xml_str2json(data);
               var point = new ol.geom.Point([lon, lat]);
@@ -449,7 +459,7 @@ var TestModule = (function() {
             // if a feature was inserted, post succeeded
             if (data.indexOf('<wfs:totalDeleted>1</wfs:totalDeleted>') !== -1) {
               console.log('---- deletedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
-                  ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
+                  ' post duration: ', (Date.now() - timeInMillies));
               if (callback_success) {
                 callback_success();
               }
@@ -529,7 +539,7 @@ var TestModule = (function() {
             // if a feature was inserted, post succeeded
             if (data.indexOf('<wfs:totalUpdated>1</wfs:totalUpdated>') !== -1) {
               console.log('---- updatedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
-                  ' post duration: ', (Date.now() - timeInMillies), ', response: ', data);
+                  ' post duration: ', (Date.now() - timeInMillies));
               transform = ol.proj.getTransform(projectionMap, projection4326);
               point.transform(transform);
               feature.geom.coords = point.getCoordinates();
