@@ -15,7 +15,7 @@ var TestModule = (function() {
     zoomMax: 14,
 
     // how often to run in milliseconds
-    frequency: 2000,
+    frequency: 10000,
 
     // if set and greater than zero, run will only run these many times and then automatically stop
     runCounterMax: 0,
@@ -43,8 +43,8 @@ var TestModule = (function() {
     // operations, the more often it will tend to get selected.
     operations: {
       createFeature: 5,
-      removeFeature: 5,
-      modifyFeature: 5,
+      removeFeature: 2,
+      modifyFeature: 3,
       moveView: 0
     },
 
@@ -53,7 +53,7 @@ var TestModule = (function() {
     // are not of advantage or cause a disadvantage, you may disable animation.
     moveToViewAnimate: false,
 
-    //TODO: Add a no conflict option
+    noConflictMode: false,
 
     // if the geometry attribute type is not geom, it can be set here. for example, 'the_geom'
     geomAttributeName: 'geom'
@@ -68,6 +68,7 @@ var TestModule = (function() {
   var dateLastRun = null;
   var concurrentCompletedCount = 0;
   var featureList = [];
+  var myFeaturesList = [];
 
   // returns floating point number. min inclusive, max exclusive
   function getRandomBetween(min, max) {
@@ -329,11 +330,36 @@ var TestModule = (function() {
   };
 
   function getRandomFeature(removeFromList) {
-    var index = getRandomIntegerBetween(0, featureList.length);
-    if (removeFromList) {
-      return featureList.splice(index, 1)[0];
+    var index;
+    var feature;
+    if (config.noConflictMode) {
+      // Work off of myFeatureList
+      index = getRandomIntegerBetween(0, myFeaturesList.length);
+      if (removeFromList) {
+        // Remove it from both lists
+        feature = myFeaturesList.splice(index, 1)[0];
+        featureList.splice(index, 1);
+      } else {
+        feature = myFeaturesList[index];
+      }
+    } else {
+      // Work off of featureList
+      index = getRandomIntegerBetween(0, featureList.length);
+      if (removeFromList) {
+        // Remove it from featureList
+        feature = featureList.splice(index, 1)[0];
+        index = myFeaturesList.indexOf(feature);
+        // Check to see if this was feature we added
+        if (index !== -1) {
+          // We added this feature so we need to remove it from myFeaturesList as well
+          myFeaturesList.splice(index, 1);
+        }
+      } else {
+        feature = featureList[index];
+      }
     }
-    return featureList[index];
+
+    return feature;
   }
 
   function getAllFeatures() {
@@ -392,13 +418,15 @@ var TestModule = (function() {
               var point = new ol.geom.Point([lon, lat]);
               var transform = ol.proj.getTransform(projectionMap, projection4326);
               point.transform(transform);
-              featureList.push({
+              var newFeature = {
                 'fid': json.TransactionResponse.InsertResults.Feature.FeatureId._fid,
                 'geom': {
                   'srsName': projection4326,
                   'coords': point.getCoordinates()
                 }
-              });
+              };
+              featureList.push(newFeature);
+              myFeaturesList.push(newFeature);
               if (callback_success) {
                 callback_success();
               }
