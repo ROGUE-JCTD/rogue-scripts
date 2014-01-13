@@ -403,7 +403,7 @@ var TestModule = (function() {
                 callback_success();
               }
             } else if (data.indexOf('ExceptionReport') !== -1) {
-              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data);
+              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data, status, headers, config);
               p.stop();
               var begin = data.indexOf('<ows:ExceptionText>');
               var end = data.indexOf('</ows:ExceptionText>');
@@ -416,7 +416,7 @@ var TestModule = (function() {
                 callback_error();
               }
             } else {
-              console.log('====[ TestModule. Unknown Status or Error #1: ', data);
+              console.log('====[ TestModule. Unknown Status or Error #1: ', data, status, headers, config);
               p.stop();
               alert('Wfs-T Unknown Status or Error. See console for response.');
               if (callback_error) {
@@ -424,14 +424,14 @@ var TestModule = (function() {
               }
             }
           } else if (status === 401) {
-            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data);
+            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data, status, headers, config);
             alert('TestModule. Wfs-T, unauthorized. Verify username: ' + config.username +
                 ', password: ' + config.password);
             if (callback_error) {
               callback_error();
             }
           } else {
-            console.log('====[ TestModule. Unknown Status or Error #2: ', data);
+            console.log('====[ TestModule. Unknown Status or Error #2: ', data, status, headers, config);
             p.stop();
             alert('Wfs-T Unknown Status or Error. See console for response.');
             if (callback_error) {
@@ -464,7 +464,7 @@ var TestModule = (function() {
                 callback_success();
               }
             } else if (data.indexOf('ExceptionReport') !== -1) {
-              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data);
+              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data, feature, status, headers, config);
               p.stop();
               var begin = data.indexOf('<ows:ExceptionText>');
               var end = data.indexOf('</ows:ExceptionText>');
@@ -477,7 +477,7 @@ var TestModule = (function() {
                 callback_error();
               }
             } else {
-              console.log('====[ TestModule. Unknown Status or Error #1: ', data);
+              console.log('====[ TestModule. Unknown Status or Error #1: ', data, feature, status, headers, config);
               p.stop();
               alert('Wfs-T Unknown Status or Error. See console for response.');
               if (callback_error) {
@@ -485,14 +485,14 @@ var TestModule = (function() {
               }
             }
           } else if (status === 401) {
-            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data);
+            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data, feature, status, headers, config);
             alert('TestModule. Wfs-T, unauthorized. Verify username: ' + config.username +
                 ', password: ' + config.password);
             if (callback_error) {
               callback_error();
             }
           } else {
-            console.log('====[ TestModule. Unknown Status or Error #2: ', data);
+            console.log('====[ TestModule. Unknown Status or Error #2: ', data, feature, status, headers, config);
             p.stop();
             alert('Wfs-T Unknown Status or Error. See console for response.');
             if (callback_error) {
@@ -547,7 +547,7 @@ var TestModule = (function() {
                 callback_success();
               }
             } else if (data.indexOf('ExceptionReport') !== -1) {
-              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data);
+              console.log('====[ TestModule. Wfs Transaction Exception occured: ', data, feature, status, headers, config);
               p.stop();
               var begin = data.indexOf('<ows:ExceptionText>');
               var end = data.indexOf('</ows:ExceptionText>');
@@ -560,7 +560,7 @@ var TestModule = (function() {
                 callback_error();
               }
             } else {
-              console.log('====[ TestModule. Unknown Status or Error #1: ', data);
+              console.log('====[ TestModule. Unknown Status or Error #1: ', data, feature, status, headers, config);
               p.stop();
               alert('Wfs-T Unknown Status or Error. See console for response.');
               if (callback_error) {
@@ -568,14 +568,14 @@ var TestModule = (function() {
               }
             }
           } else if (status === 401) {
-            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data);
+            console.log('====[ Error: Wfs Transaction, Unauthorized: ', data, feature, status, headers, config);
             alert('TestModule. Wfs-T, unauthorized. Verify username: ' + config.username +
                 ', password: ' + config.password);
             if (callback_error) {
               callback_error();
             }
           } else {
-            console.log('====[ TestModule. Unknown Status or Error #2: ', data);
+            console.log('====[ TestModule. Unknown Status or Error #2: ', data, feature, status, headers, config);
             p.stop();
             alert('Wfs-T Unknown Status or Error. See console for response.');
             if (callback_error) {
