@@ -53,7 +53,10 @@ var TestModule = (function() {
     // are not of advantage or cause a disadvantage, you may disable animation.
     moveToViewAnimate: false,
 
-    noConflictMode: false,
+    // only modify or remove features that were created by this script. Any features that already existed when 
+    // the script was started will not be modified / removed so that if geogit is syncing the underlying repositories
+    // no conflicts can arise 
+    noConflictMode: true,
 
     // if the geometry attribute type is not geom, it can be set here. for example, 'the_geom'
     geomAttributeName: 'geom'
