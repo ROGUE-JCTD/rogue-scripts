@@ -1,0 +1,17 @@
+{
+  "run_list": [
+    "recipe[apt]",
+    "recipe[python]",
+    "recipe[git]",
+    "recipe[rogue::postgresql]",
+    "recipe[rogue]"
+  ],
+  "rogue": {
+    "networking":{
+      "application": {
+        "fqdn": "geoserver.rogue.lmnsolutions.com"
+       }
+    },
+   "rogue_geonode":{"branch":"maploom"}
+  }
+}
