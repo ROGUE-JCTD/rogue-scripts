@@ -5,17 +5,17 @@ var TestModule = (function() {
   var config = {
 
     // which part of the map to select a random point from
-    latMin: -90,
-    latMax: 90,
-    lonMin: -180,
-    lonMax: 180,
+    latMin: -80,
+    latMax: 80,
+    lonMin: -170,
+    lonMax: 170,
 
     // how far to zoom in / out
-    zoomMin: 0,
+    zoomMin: 4,
     zoomMax: 14,
 
     // how often to run in milliseconds
-    frequency: 10000,
+    frequency: 5000,
 
     // if set and greater than zero, run will only run these many times and then automatically stop
     runCounterMax: 0,
