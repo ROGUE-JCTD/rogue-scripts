@@ -37,7 +37,7 @@ def restart_tomcat():
     sudo('service tomcat7 restart')
 
 
-def reprovision(remove_geoserver_data=True, reboot=False):
+def reprovision(remove_geoserver_data=False, reboot=False):
     """
     Re-provisions a server (runs /opt/chef-run/run.sh)
     """
