@@ -10,6 +10,10 @@ from subprocess import Popen, PIPE
 # To ignore known-hosts use the -D option
 # See http://docs.fabfile.org/en/1.4.0/usage/fab.html for all fabric options
 
+# Run a task with arguments
+# http://docs.fabfile.org/en/latest/usage/fab.html#per-task-arguments
+# fab <task>:kwarg=value -H host -u <user> -p <password>
+
 def map_loom_django_dev():
     """
     Creates symlinks need to develop MapLoom in our Django environment
@@ -33,12 +37,17 @@ def restart_tomcat():
     sudo('service tomcat7 restart')
 
 
-def reprovision():
+def reprovision(remove_geoserver_data=True, reboot=False):
     """
     Re-provisions a server (runs /opt/chef-run/run.sh)
     """
-    sudo('rm -rf /var/lib/geoserver_data')
+    if remove_geoserver_data:
+        sudo('rm -rf /var/lib/geoserver_data')
+
     sudo('/bin/bash /opt/chef-run/run.sh')
+
+    if reboot:
+        sudo('reboot')
 
 
 
