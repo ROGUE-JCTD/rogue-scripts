@@ -760,7 +760,7 @@ var TestModule = (function() {
                 callback_error();
               }
             } else {
-              console.log('====[ TestModule. Unknown Status or Error #1: ', data, feature, status, headers, config);
+              console.log('====[ TestModule. Unknown Status or Error #3: ', data, feature, status, headers, config);
               p.stop();
               alert('Wfs-T Unknown Status or Error. See console for response.');
               if (callback_error) {
@@ -775,7 +775,7 @@ var TestModule = (function() {
               callback_error();
             }
           } else {
-            console.log('====[ TestModule. Unknown Status or Error #2: ', data, feature, status, headers, config);
+            console.log('====[ TestModule. Unknown Status or Error #4: ', data, feature, status, headers, config);
             p.stop();
             alert('Wfs-T Unknown Status or Error. See console for response.');
             if (callback_error) {
@@ -843,7 +843,7 @@ var TestModule = (function() {
                 callback_error();
               }
             } else {
-              console.log('====[ TestModule. Unknown Status or Error #1: ', data, feature, status, headers, config);
+              console.log('====[ TestModule. Unknown Status or Error #5: ', data, feature, status, headers, config);
               p.stop();
               alert('Wfs-T Unknown Status or Error. See console for response.');
               if (callback_error) {
@@ -858,7 +858,7 @@ var TestModule = (function() {
               callback_error();
             }
           } else {
-            console.log('====[ TestModule. Unknown Status or Error #2: ', data, feature, status, headers, config);
+            console.log('====[ TestModule. Unknown Status or Error #6: ', data, feature, status, headers, config);
             p.stop();
             alert('Wfs-T Unknown Status or Error. See console for response.');
             if (callback_error) {
@@ -890,6 +890,10 @@ var TestModule = (function() {
 
   p.getConfig = function() {
     return config;
+  };
+
+  p.getFeatures = function() {
+    return featureList;
   };
 
   return p;
