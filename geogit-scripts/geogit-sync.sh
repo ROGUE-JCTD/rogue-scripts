@@ -1,4 +1,15 @@
 #!/bin/bash
+
+# This script is sync two repositories that are published through geoserver,
+# it uses a third repository not published to sync the other two. For this script to work
+# you need to fill out all of the variables listed below. Then to have it run
+# automatically you need to just add it to the crontab. To do that just run
+# "sudo crontab - e" then add this line to the bottom
+# "*/5 * * * * /Path/To/Script &> /dev/null" the beginning tells it how often to run,
+# in this case it's every five minutes, then you need to specify the path to the script,
+# the final bit is to prevent cron from sending an email to the root user every time it runs.
+
+# Add the path to the geogit binary so that root has access to the command
 export GEOGIT_HOME=/var/lib/geogit/src/cli-app/target/geogit && PATH=$PATH:$GEOGIT_HOME/bin
 # Path to the offline repository that will receive the updates.
 REPO_PATH=/Path/To/Repo
