@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export GEOGIT_HOME=/var/lib/geogit/src/cli-app/target/geogit && PATH=$PATH:$GEOGIT_HOME/bin
 # Path to the offline repository that will receive the updates.
 REPO_PATH=/Path/To/Repo
 
@@ -54,10 +54,13 @@ do
         if [ $EXIT_CODE -gt 0 ]; then
          ERROR_OCCURED=255
         fi
-        geogit push $SYNC_WITH_REMOTE_ONE
+        OUTPUT=$(geogit push $SYNC_WITH_REMOTE_ONE)
         EXIT_CODE=$?
+        echo $OUTPUT
         if [ $EXIT_CODE -gt 0 ]; then 
-         ERROR_OCCURED=255
+        if [  "$OUTPUT" != "Nothing to push." ]; then
+        ERROR_OCCURED=255
+        fi
         fi
         sleep $AUTO_SYNC_DELAY
 done
@@ -74,15 +77,18 @@ do
         if [ $EXIT_CODE -gt 0 ]; then 
          ERROR_OCCURED=255
         fi
-        geogit push $SYNC_WITH_REMOTE_TWO
+        OUTPUT=$(geogit push $SYNC_WITH_REMOTE_TWO)
         EXIT_CODE=$?
-        if [ $EXIT_CODE -gt 0 ]; then 
-         ERROR_OCCURED=255
+        echo $OUTPUT
+        if [ $EXIT_CODE -gt 0 ]; then
+        if [  "$OUTPUT" != "Nothing to push." ]; then
+        ERROR_OCCURED=255
+        fi
         fi
         sleep $AUTO_SYNC_DELAY
 done
 
 if [ $ERROR_OCCURED -eq 255 ]; then
-        cat $LOG_FILE | mail -s $EMAIL_SUBJECT $EMAIL_ADDRESS
+        cat $LOG_FILE | mail -s "$EMAIL_SUBJECT" $EMAIL_ADDRESS
         echo $ERROR_MESSAGE >> $ERROR_FILE
 fi
