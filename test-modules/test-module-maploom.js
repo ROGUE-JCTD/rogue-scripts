@@ -45,8 +45,6 @@ var TestModule = (function() {
       createFeature: 5,
       removeFeature: 2,
       modifyFeature: 3,
-      removeFeature: 0,
-      modifyFeature: 0,
       moveView: 0
     },
 
@@ -62,10 +60,10 @@ var TestModule = (function() {
     // only modify or remove features that were created by this script. Any features that already existed when
     // the script was started will not be modified / removed so that if geogit is syncing the underlying repositories
     // no conflicts can arise 
-    noConflictMode: true,
+    noConflictMode: false,
 
     // if the geometry attribute type is not geom, it can be set here. for example, 'the_geom'
-    geomAttributeName: 'the_geom'
+    geomAttributeName: 'geom'
   };
 
   var stopped = false;
@@ -536,15 +534,15 @@ var TestModule = (function() {
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service= "WFS" version="1.1.0" handle="' +
-        '{&quot;' + config.layerName + '&quot;:{&quot;added&quot;:1}}" ' +
-        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
+        'service="WFS" version="1.0.0" handle="' +
+        'Added 1 feature to \'' + config.layerName + '\' via Test Script." ' +
+        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/wfs.xsd">' +
         '<wfs:Insert handle="' +
-        '{&quot;' + config.layerName + '&quot;:{&quot;added&quot;:1}}">' +
+        'Added 1 feature to \'' + config.layerName + '\' via Test Script.">' +
         '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
         '<feature:' + config.geomAttributeName + '>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
-        '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
+        '<gml:coordinates decimal="." cs="," ts=" ">' + lon + ',' + lat + '</gml:coordinates>' +
         '</gml:Point>' +
         '</feature:' + config.geomAttributeName + '>' +
         attributesXML +
@@ -558,11 +556,11 @@ var TestModule = (function() {
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service= "WFS" version="1.1.0" handle="' +
-        '{&quot;' + config.layerName + '&quot;:{&quot;removed&quot;:1}}" ' +
-        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
+        'service="WFS" version="1.0.0" handle="' +
+        'Removed 1 feature from \'' + config.layerName + '\' via Test Script." ' +
+        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/wfs.xsd">' +
         '<wfs:Delete xmlns:feature="http://www.geonode.org/"  handle="' +
-        '{&quot;' + config.layerName + '&quot;:{&quot;removed&quot;:1}}" typeName="' +
+        'Removed 1 feature from \'' + config.layerName + '\' via Test Script." typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
         '<ogc:FeatureId fid="' + feature.fid + '"/>' +
@@ -576,18 +574,18 @@ var TestModule = (function() {
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service= "WFS" version="1.1.0" handle="' +
-        '{&quot;' + config.layerName + '&quot;:{&quot;modified&quot;:1}}" ' +
-        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
+        'service="WFS" version="1.0.0" handle="' +
+        'Modified 1 feature in \'' + config.layerName + '\' via Test Script." ' +
+        'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/wfs.xsd">' +
         '<wfs:Update xmlns:feature="http://www.geonode.org/" handle="' +
-        '{&quot;' + config.layerName + '&quot;:{&quot;modified&quot;:1}}" typeName="' +
+        'Modified 1 feature in \'' + config.layerName + '\' via Test Script." typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<wfs:Property>' +
         '<wfs:Name>' + config.geomAttributeName +
         '</wfs:Name>' +
         '<wfs:Value>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
-        '<gml:pos>' + newPosition[0] + ' ' + newPosition[1] + '</gml:pos>' +
+        '<gml:coordinates decimal="." cs="," ts=" ">' + newPosition[0] + ',' + newPosition[1] + '</gml:coordinates>' +
         '</gml:Point>' +
         '</wfs:Value>' +
         '</wfs:Property>' +
@@ -693,7 +691,7 @@ var TestModule = (function() {
           if (status === 200) {
 
             // if a feature was inserted, post succeeded
-            if (data.indexOf('<wfs:totalInserted>1</wfs:totalInserted>') !== -1) {
+            if (data.indexOf('<wfs:Status> <wfs:SUCCESS/> </wfs:Status>') !== -1) {
               console.log('---- createFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies));
               var x2js = new X2JS();
@@ -702,7 +700,7 @@ var TestModule = (function() {
               var transform = ol.proj.getTransform(projectionMap, projection4326);
               point.transform(transform);
               var newFeature = {
-                'fid': json.TransactionResponse.InsertResults.Feature.FeatureId._fid,
+                'fid': json.WFS_TransactionResponse.InsertResult.FeatureId._fid,
                 'geom': {
                   'srsName': projection4326,
                   'coords': point.getCoordinates()
@@ -768,7 +766,7 @@ var TestModule = (function() {
           if (status === 200) {
 
             // if a feature was inserted, post succeeded
-            if (data.indexOf('<wfs:totalDeleted>1</wfs:totalDeleted>') !== -1) {
+            if (data.indexOf('<wfs:Status> <wfs:SUCCESS/> </wfs:Status>') !== -1) {
               console.log('---- deletedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies));
               if (callback_success) {
@@ -830,16 +828,18 @@ var TestModule = (function() {
     var point = new ol.geom.Point($.extend(true, [], feature.geom.coords));
     var randomLat = getRandomBetween(-1.0, 1.0);
     var randomLon = getRandomBetween(-1.0, 1.0);
-    point.getCoordinates()[0] += randomLon;
-    point.getCoordinates()[1] += randomLat;
-    if (point.getCoordinates()[0] > config.lonMax || point.getCoordinates()[0] < config.lonMin ||
-        point.getCoordinates()[1] > config.latMax || point.getCoordinates()[1] < config.latMin) {
+    var coords = point.getCoordinates();
+    coords[0] += randomLon;
+    coords[1] += randomLat;
+    if (coords[0] > config.lonMax || coords[0] < config.lonMin ||
+        coords[1] > config.latMax || coords[1] < config.latMin) {
       console.log('====[ Could not update feature, new position went out of bounds');
       if (callback_success) {
         callback_success();
       }
       return;
     }
+    point.setCoordinates(coords);
     var transform = ol.proj.getTransform(projection4326, projectionMap);
     point.transform(transform);
 
@@ -848,7 +848,7 @@ var TestModule = (function() {
           if (status === 200) {
 
             // if a feature was inserted, post succeeded
-            if (data.indexOf('<wfs:totalUpdated>1</wfs:totalUpdated>') !== -1) {
+            if (data.indexOf('<wfs:Status> <wfs:SUCCESS/> </wfs:Status>') !== -1) {
               console.log('---- updatedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies));
               transform = ol.proj.getTransform(projectionMap, projection4326);
