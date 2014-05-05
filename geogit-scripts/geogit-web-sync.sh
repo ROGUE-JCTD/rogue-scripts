@@ -13,6 +13,37 @@
 export GEOGIT_HOME=/var/lib/geogit/src/cli-app/target/geogit && PATH=$PATH:$GEOGIT_HOME/bin
 # Path to the offline repository that will receive the updates.
 EXECUTE_PATH=/home/rogue/aws-sync
+
+LOCKFILE=$EXECUTE_PATH/lock.pid
+
+# check for existing lockfile
+if [ -e "$LOCKFILE" ]; then
+# lockfile exists
+   if [ ! -r "$LOCKFILE" ]; then
+      echo error: lockfile is not readable
+      exit 1
+   fi
+   PID=`cat "$LOCKFILE"`
+   kill -0 "$PID" 2>/dev/null
+   if [ $? == 0 ]; then
+      echo error: existing instance of this task is already running
+      exit 1
+   fi
+# process that created lockfile is no longer running - delete lockfile
+   rm -f "$LOCKFILE"
+   if [ $? != 0 ]; then
+# error: failed to delete lockfile
+      exit 1
+   fi
+fi
+
+# create lockfile
+echo $$ >"$LOCKFILE"
+if [ $? != 0 ]; then
+# error: failed to create lockfile
+   exit 1
+fi
+
 PYTHON=/var/lib/geonode/bin/python
 MANAGE_PY=/var/lib/geonode/rogue_geonode/manage.py
 REPO_URL=http://dev.rogue.lmnsolutions.com/geoserver/geogit/geonode:copeco_capas_repo
@@ -49,6 +80,12 @@ cd $EXECUTE_PATH
 
 if [ -f $ERROR_FILE ];
 then
+# delete lockfile
+rm -f "$LOCKFILE"
+if [ $? != 0 ]; then
+# error: failed to delete lockfile
+   exit 256
+fi
 exit 255
 fi
 
@@ -77,4 +114,11 @@ done
 if [ $ERROR_OCCURED -eq 255 ]; then
         cat $LOG_FILE | mail -s "$EMAIL_SUBJECT" $EMAIL_ADDRESS
         echo $ERROR_MESSAGE >> $ERROR_FILE
+fi
+
+# delete lockfile
+rm -f "$LOCKFILE"
+if [ $? != 0 ]; then
+# error: failed to delete lockfile
+   exit 1
 fi
