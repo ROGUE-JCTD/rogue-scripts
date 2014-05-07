@@ -4,7 +4,10 @@ _rprofiles=("testprofile1")
 # sync it
 for r in "${_rprofiles[@]}"
 do
-        source $HOME/.keychain/$HOSTNAME-sh
-   
-        unison -sshargs "-i /home/rogue/rogue.pem" ${r}
+#        uncomment this if you are using keychain
+#        source $HOME/.keychain/$HOSTNAME-sh
+
+#       if you are using a pem file for ssh then add this after unison
+#        -sshargs "-i /path/to/file.pem"
+        unison ${r}
 done
