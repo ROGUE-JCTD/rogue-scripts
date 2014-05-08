@@ -14,7 +14,7 @@
       {
         "geom":{"name":"geom", "type":"LINESTRING"},
         "status": {"name":"status", "type":"STRING"},
-        "media": {"name":"media", "type":"STRING"},
+        "photos": {"name":"media", "type":"STRING"},
         "name":{"name":"name", "type":"STRING"},
         "ref":{"name":"ref", "type":"STRING"},
         "highway":{"name":"highway", "type":"STRING"},
@@ -40,7 +40,7 @@
       "fields":{
         "geom":{"name":"geom","type":"POLYGON"},
         "status": {"name":"status", "type":"STRING"},
-        "media": {"name":"media", "type":"STRING"},
+        "photos": {"name":"media", "type":"STRING"},
         "building":{"name":"building", "type":"STRING"},
         "aeroway":{"name":"aeroway", "type":"STRING"}
       }
