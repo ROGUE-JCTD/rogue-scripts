@@ -344,8 +344,7 @@ var TestModule = (function() {
     var lon = getRandomBetween(config.lonMin, config.lonMax);
     var zoom = getRandomIntegerBetween(config.zoomMin, config.zoomMax);
     var point = new ol.geom.Point([lon, lat]);
-    var transform = ol.proj.getTransform(projection4326, projectionMap);
-    point.transform(transform);
+    point.transform(projection4326, projectionMap);
 
     return {
       center: point.getCoordinates(),
@@ -355,8 +354,7 @@ var TestModule = (function() {
 
   function getViewFromFeature(feature) {
     var point = new ol.geom.Point($.extend(true, [], feature.geom.coords));
-    var transform = ol.proj.getTransform(projection4326, projectionMap);
-    point.transform(transform);
+    point.transform(projection4326, projectionMap);
     return {
       center: point.getCoordinates(),
       zoom: getRandomIntegerBetween(config.zoomMin, config.zoomMax)
@@ -652,8 +650,7 @@ var TestModule = (function() {
           coords = [parseFloat(coords[1]), parseFloat(coords[0])];
           if (srs !== projection4326) {
             var point = new ol.geom.Point(coords);
-            var transform = ol.proj.getTransform(srs, projection4326);
-            point.transform(transform);
+            point.transform(srs, projection4326);
           }
           featureList.push({
             'fid': feature[config.layerName]['_gml:id'],
@@ -697,8 +694,7 @@ var TestModule = (function() {
               var x2js = new X2JS();
               var json = x2js.xml_str2json(data);
               var point = new ol.geom.Point([lon, lat]);
-              var transform = ol.proj.getTransform(projectionMap, projection4326);
-              point.transform(transform);
+              point.transform(projectionMap, projection4326);
               var newFeature = {
                 'fid': json.WFS_TransactionResponse.InsertResult.FeatureId._fid,
                 'geom': {
@@ -840,8 +836,7 @@ var TestModule = (function() {
       return;
     }
     point.setCoordinates(coords);
-    var transform = ol.proj.getTransform(projection4326, projectionMap);
-    point.transform(transform);
+    point.transform(projection4326, projectionMap);
 
     httpService.post(url, getUpdateWfsData(feature, point.getCoordinates()), {headers: config.headerData})
         .success(function(data, status, headers, config) {
@@ -851,8 +846,7 @@ var TestModule = (function() {
             if (data.indexOf('<wfs:Status> <wfs:SUCCESS/> </wfs:Status>') !== -1) {
               console.log('---- updatedFeature success @ ' + dateLastRun + '. runCounter: ' + runCounter +
                   ' post duration: ', (Date.now() - timeInMillies));
-              transform = ol.proj.getTransform(projectionMap, projection4326);
-              point.transform(transform);
+              point.transform(projectionMap, projection4326);
               feature.geom.coords = point.getCoordinates();
               if (callback_success) {
                 callback_success();
