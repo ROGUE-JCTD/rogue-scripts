@@ -50,6 +50,8 @@ REPO_URL=http://dev.rogue.lmnsolutions.com/geoserver/geogit/geonode:copeco_capas
 REMOTE_NAME=aws
 USERNAME=admin
 PASSWORD=admin
+AUTHORNAME="Script_Sync"
+AUTHOREMAIL="scriptsync@lmnsolutions.com"
 
 # Auto-Sync Delay (in seconds)
 AUTO_SYNC_DELAY=60
@@ -101,7 +103,7 @@ printf "\nRemote: $REMOTE_NAME\n";
 for i in `seq 1 $SYNC_ATTEMPTS`
 do
         echo "Attempt $i of $SYNC_ATTEMPTS."
-        $PYTHON $MANAGE_PY geogit-sync -u $REPO_URL -r $REMOTE_NAME --username $USERNAME --password $PASSWORD
+        $PYTHON $MANAGE_PY geogit-sync -u $REPO_URL -r $REMOTE_NAME --username $USERNAME --password $PASSWORD --authorname $AUTHORNAME --authoremail $AUTHOREMAIL
         EXIT_CODE=$?
         if [ $EXIT_CODE -eq 0 ]; then
 	 ERROR_OCCURED=0
