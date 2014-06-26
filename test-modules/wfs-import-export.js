@@ -8,50 +8,63 @@ var WfsModule = (function() {
     password: '',
 
     sourceLayerName: 'geonode:MuestreodeViviendas',
-    destinationLayerName: 'geonode:SyrusMuestreodeViviendas', //'muestreo_viviendas',
+    destinationLayerName: 'geonode:muestreo_viviendas',
 
     destinationSrs: 'EPSG:4326',
 
-    // destination: source
+    forceDestinationAttribsToLower: true,
+
+    // source: destination
     attributesMap: {
-      Fecha_de_levantamiento: 'fecha_hora',
-      Nombre_quien_levanto: 'Levanto',
+      fecha_hora: 'Fecha_de_levantamiento',
+      Levanto: 'Nombre_quien_levanto',
       Codigo: 'Codigo',
-      Departamento: 'departamen',
+      departamen: 'Departamento',
       Municipio: 'Municipio',
       Ciudad: 'Ciudad',
-      Barrio_o_Colonia: 'Barrio_Col',
-      Aldea_o_Cacerio: 'aldea_cace',
-      Direccion_exacta: 'Sector, numero_cas, Calle',
-      Fecha_inicio_del_proyecto: 'Fecha_inic',
-      Fecha_terminacion_del_proyecto: 'Fecha_fina',
-      Nombre_del_beneficiario: 'Beneficiar',
-      Numero_de_identidad: 'Identidad',
-      Estado_civil: 'Est_civil',
-      Nombre_del_conyugue: 'Conyugue',
-      Numero_de_hijos: 'No__Hijos',
-      Numero_de_telefono: 'Telefono',
-      Actividad_laboral_del_beneficiario: 'ac_laboral',
-      Documento_de_propiedad: 'doc_terren',
-      Sobrecimiento: 'Sobrecimie',
-      Solera_inferior: 'Solera',
+      Barrio_Col: 'Barrio_o_Colonia',
+      aldea_cace: 'Aldea_o_Cacerio',
+      Calle: 'Direccion_exacta',
+      Fecha_inic: 'Fecha_inicio_del_proyecto',
+      Fecha_fina: 'Fecha_terminacion_del_proyecto',
+      Beneficiar: 'Nombre_del_beneficiario',
+      Identidad: 'Numero_de_identidad',
+      Est_civil: 'Estado_civil',
+      Conyugue: 'Nombre_del_conyugue',
+      No__Hijos: 'Numero_de_hijos',
+      Telefono: 'Numero_de_telefono',
+      ac_laboral: 'Actividad_laboral_del_beneficiario',
+      doc_terren: 'Documento_de_propiedad',
+      Sobrecimie: 'Sobrecimiento',
+      Solera: 'Solera_inferior',
       Cargadores: 'Cargadores',
-      Paredes_de_bloque: 'Pared',
+      Pared: 'Paredes_de_bloque',
       Puertas: 'Puertas',
-      Ventanas: 'Ventanas_u',
-      Solera_superior: 'Solera',
-      Techo_de_aluzinc: 'Techo',
-      Sistema_electrico: 'Ins_electr',
-      Observaciones: 'observacio',
-      fotos: ''
-      //geom: ''
+      Ventanas_u: 'Ventanas',
+      Techo: 'Techo_de_aluzinc',
+      Ins_electr: 'Sistema_electrico',
+      observacio: 'Observaciones',
+      fotos: 'foto',  //WARNING ********************************************* change this! to fotos
+      the_geom: 'geom'
     }
   };
 
   var mapService = angular.element('html').injector().get('mapService');
   var httpService = angular.element('html').injector().get('$http');
   var featureList = [];
-  var attributesStatus = {};
+  var sourceAttributes = {};
+  var destinationAttributes = {};
+  var sourceLayerNameWithoutWorkspace = null;
+  var destinationLayerNameWithoutWorkspace = null;
+
+  function removeWorkspaceFromLayerName(workspaceLayerName) {
+    var colonIndex = workspaceLayerName.indexOf(':');
+    if (colonIndex === -1) {
+      return workspaceLayerName;
+    } else {
+      return workspaceLayerName.substring(colonIndex+1);
+    }
+  }
 
   function getAllFeatures(callback_success, callback_error) {
     console.log('---- getAllFeatures');
@@ -140,37 +153,47 @@ var WfsModule = (function() {
 
   }
 
+  function getDestinationProperty(sourceProperty) {
+
+  }
+
   function getInsertWfsFeaturesXml() {
     var xml = '';
+    var geometryName = null;
     console.log('==== featureList: ', featureList);
     for (var index in featureList) {
       var feature = featureList[index];
       var attributesXML = '';
-      //NOTE: might be .properties
       console.log('---- feature: ', feature);
       for (var property in feature.properties) {
         var value = feature.properties[property];
         if (goog.isDefAndNotNull(value)) {
+          // if there is a mapping for this attribute, lookup what the destination should be
           if (goog.isDefAndNotNull(config.attributesMap) && goog.isDefAndNotNull(config.attributesMap[property])) {
             property = config.attributesMap[property];
-            if (!goog.isDefAndNotNull(attributesStatus.property)) {
-              attributesStatus.property = 0;
-            }
-            attributesStatus.property += 1;
           }
           attributesXML += '<feature:' + property + '>' + value + '</feature:' + property + '>';
         }
       }
       console.log('---- feature, attributesXML: ', attributesXML);
+      // if there is a mapping for geometry name, use it
+      if (geometryName === null) {
+        if (goog.isDefAndNotNull(config.attributesMap[feature.geometry_name])){
+          geometryName = config.attributesMap[feature.geometry_name];
+        } else {
+          geometryName = feature.geometry_name;
+        }
+      }
+
       xml += '' +
-          '<feature:' + config.destinationLayerName + ' xmlns:feature="http://www.geonode.org/">' +
-            '<feature:' + feature.geometry_name + '>' +
+          '<feature:' + destinationLayerNameWithoutWorkspace + ' xmlns:feature="http://www.geonode.org/">' +
+            '<feature:' + geometryName + '>' +
               '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + config.destinationSrs + '">' +
                 '<gml:coordinates decimal="." cs="," ts=" ">' + feature.geometry.coordinates[0] + ',' + feature.geometry.coordinates[1] + '</gml:coordinates>' +
               '</gml:Point>' +
-            '</feature:' + feature.geometry_name + '>' +
+            '</feature:' + geometryName + '>' +
             attributesXML +
-          '</feature:' + config.destinationLayerName + '>';
+          '</feature:' + destinationLayerNameWithoutWorkspace + '>';
     }
     return xml;
   }
@@ -181,8 +204,8 @@ var WfsModule = (function() {
         '<?xml version="1.0" encoding="UTF-8"?>' +
         '<wfs:Transaction xmlns:wfs="http://www.opengis.net/wfs"' +
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
-        'service="WFS" version="1.0.0">' +
-        '<wfs:Insert handle="Added feature(s) using wfs-import-export script">' +
+        'service="WFS" version="1.0.0" handle="Imported features from layer ' + sourceLayerNameWithoutWorkspace + ' into layer ' + destinationLayerNameWithoutWorkspace + ' using wfs-import script">' +
+        '<wfs:Insert>' +
         getInsertWfsFeaturesXml() +
         '</wfs:Insert>' +
         '</wfs:Transaction>';
@@ -190,77 +213,108 @@ var WfsModule = (function() {
     return xml;
   }
 
-  function verifyAttribuesMap() {
-    var url = '/geoserver/wfs?service=wfs&version=2.0.0&request=DescribeFeatureType&typeNames=' +
+  function verifyAttribuesMap(successCallback, errorCallback) {
+
+    // if option is set, convert all destination attribs to lower case.
+    if (goog.isDefAndNotNull(config.forceDestinationAttribsToLower) &&
+        config.forceDestinationAttribsToLower == true) {
+      for (var property in config.attributesMap) {
+        var destinationProperty = config.attributesMap[property];
+        if ( destinationProperty !== destinationProperty.toLowerCase()) {
+          config.attributesMap[property] = destinationProperty.toLowerCase();
+        }
+      }
+      console.log('----> lowered destination properties: ', config.attributesMap);
+    }
+
+    var url = '/geoserver/wfs?service=wfs&version=2.0.0&request=DescribeFeatureType&typeName=' +
         config.sourceLayerName;
 
     httpService.get(url).then(function(response) {
-      console.log('====>> response: ', response);
       var x2js = new X2JS();
       var json = x2js.xml_str2json(response.data);
-      console.log(json);
+      console.log('------->> json: ', json);
 
-      var url2 = '/geoserver/wfs?service=wfs&version=2.0.0&request=DescribeFeatureType&typeNames=' +
-          config.destinationLayerName + ',' + config.sourceLayerName;
+      var sequence = json.schema.complexType.complexContent.extension.sequence.element;
+      for (var i = 0; i < sequence.length; i++) {
+        var item = sequence[i];
+        sourceAttributes[item._name] = item;
+      }
+      console.log('source attributes: ' , sourceAttributes);
+
+      var url2 = '/geoserver/wfs?service=wfs&version=2.0.0&request=DescribeFeatureType&typeName=' +
+          config.destinationLayerName;
 
       httpService.get(url2).then(function(response) {
-        console.log('====>> response2: ', response);
         var json2 = x2js.xml_str2json(response.data);
 
-        /*
-        //var sourceAttributes = json.schema.complexType.complexContent.
+        var sequence2 = json2.schema.complexType.complexContent.extension.sequence.element;
+        for (var i = 0; i < sequence2.length; i++) {
+          var item = sequence2[i];
+          destinationAttributes[item._name] = item;
+        }
+        console.log('destination attributes: ' , destinationAttributes);
 
-        // print status:
         for (var property in config.attributesMap) {
-          if (!goog.isDefAndNotNull(attributesStatus[property])) {
-            console.log('====[ WARNING: no features used the mapping ');
+          var destinationProperty = config.attributesMap[property];
+          var sourceProperty = property;
+
+          if (!goog.isDefAndNotNull(destinationProperty)) {
+            console.log('====[ ERROR: invalid destination attribute in attributesMap: ', destinationProperty);
+            if (errorCallback) {
+              errorCallback();
+            }
+          }
+
+          if (!goog.isDefAndNotNull(sourceProperty)) {
+            console.log('====[ ERROR: invalid source attribute in attributesMap: ', sourceProperty);
+            if (errorCallback) {
+              errorCallback();
+            }
+          }
+
+          if (!goog.isDefAndNotNull(destinationAttributes[destinationProperty])) {
+            console.log('====[ ERROR: destination attribute: ', destinationProperty, 'not in layer: ', destinationAttributes);
+            if (errorCallback) {
+              errorCallback();
+            }
+          }
+
+          if (!goog.isDefAndNotNull(sourceAttributes[sourceProperty])) {
+            console.log('====[ ERROR: source attribute: ', sourceProperty, 'not in layer: ', sourceAttributes);
+            if (errorCallback) {
+              errorCallback();
+            }
           }
         }
-        */
 
-        console.log(json2);
+        if (successCallback) {
+          successCallback();
+        }
       });
-
-      /*
-      if (response.data ==='blah') {
-        for (var key in response.data.features) {
-          console.log('---- feature: ', response.data.features[key]);
-        }
-
-        featureList = response.data.features;
-        if (callback_success) {
-          callback_success(featureList);
-        }
-      } else {
-        if (callback_error) {
-          callback_error();
-        }
-      }
-      */
     });
   }
 
   var p = {};
 
   p.start = function() {
-    //verifyAttribuesMap();
-
-    getAllFeatures(function(features) {
-      console.log('----[ featurs.length: ', features.length);
-      postAllFeatures();
-
-      // print status:
-      for (var property in config.attributesMap) {
-        if (!goog.isDefAndNotNull(attributesStatus[property])) {
-          console.log('====[ WARNING: no features used the mapping ');
-        }
-      }
-
-
+    var successCallback = function(){
+      console.log('----> Mapping validated');
+      getAllFeatures(function(features) {
+        console.log('----[ featurs.length: ', features.length);
+        postAllFeatures();
       }, function() {
-      console.log('====[ Error: failed to get current features of the layer. Not starting test!');
-    });
+        console.log('====[ Error: failed to get current features of the layer. Not starting test!');
+      });
+    };
 
+    var errorCallback = function(){
+      console.log('====[ ERROR: validation error');
+    };
+
+    sourceLayerNameWithoutWorkspace = removeWorkspaceFromLayerName(config.sourceLayerName);
+    destinationLayerNameWithoutWorkspace = removeWorkspaceFromLayerName(config.destinationLayerName);
+    verifyAttribuesMap(successCallback, errorCallback);
   };
 
   p.getConfig = function() {
