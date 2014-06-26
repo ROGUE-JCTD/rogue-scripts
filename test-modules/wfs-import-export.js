@@ -7,8 +7,8 @@ var WfsModule = (function() {
     username: 'syrusm',
     password: '',
 
-    sourceLayerName: 'geonode:MuestreodeViviendas',
-    destinationLayerName: 'geonode:muestreo_viviendas',
+    sourceLayerName: 'geonode:Muestreo_Pila',
+    destinationLayerName: 'geonode:muestreo_pilas',
 
     destinationSrs: 'EPSG:4326',
 
@@ -17,34 +17,23 @@ var WfsModule = (function() {
     // source: destination
     attributesMap: {
       fecha_hora: 'Fecha_de_levantamiento',
-      Levanto: 'Nombre_quien_levanto',
+      Levanto: 'Nombre_quien_Levanto',
       Codigo: 'Codigo',
-      departamen: 'Departamento',
+      Departamen: 'Departamento',
       Municipio: 'Municipio',
       Ciudad: 'Ciudad',
       Barrio_Col: 'Barrio_o_Colonia',
-      aldea_cace: 'Aldea_o_Cacerio',
-      Calle: 'Direccion_exacta',
-      Fecha_inic: 'Fecha_inicio_del_proyecto',
-      Fecha_fina: 'Fecha_terminacion_del_proyecto',
+      Aldea_cace: 'Aldea_o_Cacerio',
+      Ubicacion: 'Direccion_exacta',
       Beneficiar: 'Nombre_del_beneficiario',
       Identidad: 'Numero_de_identidad',
       Est_civil: 'Estado_civil',
       Conyugue: 'Nombre_del_conyugue',
-      No__Hijos: 'Numero_de_hijos',
+      N_Hijos: 'Numero_de_hijos',
       Telefono: 'Numero_de_telefono',
-      ac_laboral: 'Actividad_laboral_del_beneficiario',
+      Ac_Laboral: 'Actividad_laboral_del_beneficiario',
       doc_terren: 'Documento_de_propiedad',
-      Sobrecimie: 'Sobrecimiento',
-      Solera: 'Solera_inferior',
-      Cargadores: 'Cargadores',
-      Pared: 'Paredes_de_bloque',
-      Puertas: 'Puertas',
-      Ventanas_u: 'Ventanas',
-      Techo: 'Techo_de_aluzinc',
-      Ins_electr: 'Sistema_electrico',
-      observacio: 'Observaciones',
-      fotos: 'foto',  //WARNING ********************************************* change this! to fotos
+      fotos: 'fotos',
       the_geom: 'geom'
     }
   };
@@ -264,6 +253,7 @@ var WfsModule = (function() {
             if (errorCallback) {
               errorCallback();
             }
+            return;
           }
 
           if (!goog.isDefAndNotNull(sourceProperty)) {
@@ -271,6 +261,7 @@ var WfsModule = (function() {
             if (errorCallback) {
               errorCallback();
             }
+            return;
           }
 
           if (!goog.isDefAndNotNull(destinationAttributes[destinationProperty])) {
@@ -278,6 +269,7 @@ var WfsModule = (function() {
             if (errorCallback) {
               errorCallback();
             }
+            return;
           }
 
           if (!goog.isDefAndNotNull(sourceAttributes[sourceProperty])) {
@@ -285,6 +277,7 @@ var WfsModule = (function() {
             if (errorCallback) {
               errorCallback();
             }
+            return;
           }
         }
 
