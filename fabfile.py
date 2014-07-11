@@ -18,8 +18,8 @@ def map_loom_django_dev():
     """
     Creates symlinks need to develop MapLoom in our Django environment
     """
-    sudo('rm -rf /var/lib/geonode/rogue_geonode/rogue_geonode/static_root/maploom/*')
-    sudo('ln -s /MapLoom/build/* /var/lib/geonode/rogue_geonode/rogue_geonode/static_root/maploom/')
+    sudo('rm -rf /var/www/rogue/maploom/*')
+    sudo('ln -s /MapLoom/build/* /var/www/rogue/maploom/')
     sudo('rm /var/lib/geonode/rogue_geonode/rogue_geonode/templates/maps/maploom.html')
     sudo('ln -s /MapLoom/build/maploom.html /var/lib/geonode/rogue_geonode/rogue_geonode/templates/maps/maploom.html')
 
