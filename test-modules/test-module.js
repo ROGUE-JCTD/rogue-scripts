@@ -33,6 +33,8 @@ var TestModule = (function(map){
 
     // name of the layer to to which features will be added
     layerName: 'canchas_de_futbol', //'incidentes_copeco',
+    
+    workspaceURL: 'http://www.geonode.org/',
 
     // name of the column to which a log msg will be written to when a feature is placed
     attributeName: 'comentarios',
@@ -112,7 +114,7 @@ var TestModule = (function(map){
         'service= "WFS" version="1.1.0" ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd">' +
         '<wfs:Insert>' +
-        '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
+        '<feature:' + config.layerName + ' xmlns:feature="' + config.workspaceURL + '">' +
         '<feature:' + config.geomAttributeName + '>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:900913">' +
         '<gml:pos>' + lon + ' ' + lat + '</gml:pos>' +
