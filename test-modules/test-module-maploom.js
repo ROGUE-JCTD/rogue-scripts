@@ -31,6 +31,7 @@ var TestModule = (function() {
     // name of the layer to to which features will be added
     layerName: 'incidentes_copeco', //'canchas_de_futbol',
     workspaceName: 'geonode',
+    workspaceURL: 'http://www.geonode.org/',
 
     // attributes and values to set them to when creating a feature
     attributes: {
@@ -537,7 +538,7 @@ var TestModule = (function() {
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/wfs.xsd">' +
         '<wfs:Insert handle="' +
         'Added 1 feature to \'' + config.layerName + '\' via Test Script.">' +
-        '<feature:' + config.layerName + ' xmlns:feature="http://www.geonode.org/">' +
+        '<feature:' + config.layerName + ' xmlns:feature="' + config.workspaceURL + '">' +
         '<feature:' + config.geomAttributeName + '>' +
         '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + projectionMap + '">' +
         '<gml:coordinates decimal="." cs="," ts=" ">' + lon + ',' + lat + '</gml:coordinates>' +
@@ -557,7 +558,7 @@ var TestModule = (function() {
         'service="WFS" version="1.0.0" handle="' +
         'Removed 1 feature from \'' + config.layerName + '\' via Test Script." ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/wfs.xsd">' +
-        '<wfs:Delete xmlns:feature="http://www.geonode.org/"  handle="' +
+        '<wfs:Delete xmlns:feature="' + config.workspaceURL + '"  handle="' +
         'Removed 1 feature from \'' + config.layerName + '\' via Test Script." typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">' +
@@ -575,7 +576,7 @@ var TestModule = (function() {
         'service="WFS" version="1.0.0" handle="' +
         'Modified 1 feature in \'' + config.layerName + '\' via Test Script." ' +
         'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/wfs.xsd">' +
-        '<wfs:Update xmlns:feature="http://www.geonode.org/" handle="' +
+        '<wfs:Update xmlns:feature="' + config.workspaceURL + '" handle="' +
         'Modified 1 feature in \'' + config.layerName + '\' via Test Script." typeName="' +
         config.workspaceName + ':' + config.layerName + '">' +
         '<wfs:Property>' +
