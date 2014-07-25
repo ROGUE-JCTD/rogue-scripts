@@ -9,6 +9,7 @@ var WfsModule = (function() {
 
     sourceLayerName: 'geonode:Muestreo_Pila',
     destinationLayerName: 'geonode:muestreo_pilas',
+    workspaceURL: 'http://www.geonode.org/',
 
     destinationSrs: 'EPSG:4326',
 
@@ -175,7 +176,7 @@ var WfsModule = (function() {
       }
 
       xml += '' +
-          '<feature:' + destinationLayerNameWithoutWorkspace + ' xmlns:feature="http://www.geonode.org/">' +
+          '<feature:' + destinationLayerNameWithoutWorkspace + ' xmlns:feature="' + config.workspaceURL + '">' +
             '<feature:' + geometryName + '>' +
               '<gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="' + config.destinationSrs + '">' +
                 '<gml:coordinates decimal="." cs="," ts=" ">' + feature.geometry.coordinates[0] + ',' + feature.geometry.coordinates[1] + '</gml:coordinates>' +
