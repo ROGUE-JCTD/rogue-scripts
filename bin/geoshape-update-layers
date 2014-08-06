@@ -1,0 +1,11 @@
+#!/bin/bash
+# exit if anything returns failure
+set -e
+
+# store current directory
+pushd .
+
+/var/lib/geonode/bin/python /var/lib/geonode/rogue_geonode/manage.py updatelayers --ignore-errors --remove-deleted --skip-unadvertised
+    
+# restore stored directory
+popd

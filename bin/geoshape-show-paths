@@ -1,0 +1,8 @@
+#!/bin/bash
+# exit if anything returns failure
+set -e
+
+echo "Geoserver Data Directory : /var/lib/geoserver_data"
+echo "Tomcat Logs              : /var/log/tomcat7"
+echo "Nginx Logs               : /var/log/nginx"
+echo "GeoNode Logs             : /var/log/rogue"

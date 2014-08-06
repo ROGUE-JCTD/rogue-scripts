@@ -1,0 +1,5 @@
+#!/bin/bash
+# exit if anything returns failure
+set -e
+
+service nginx stop

@@ -1,0 +1,11 @@
+#!/bin/bash
+# exit if anything returns failure
+set -e
+
+sh geoshape-postgis-restart.sh
+sleep 5
+sh geoshape-tomcat-restart.sh
+sleep 5
+sh geoshape-geonode-restart.sh
+sleep 5
+sh geoshape-nginx-restart.sh
