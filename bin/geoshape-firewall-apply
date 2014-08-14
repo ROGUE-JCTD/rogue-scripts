@@ -1,3 +1,4 @@
 #!/bin/bash
 
+echo "Attempting to apply new rules. If you are unable to respond to the prompt, the rules will be reverted after a small timeout period."
 iptables-apply /opt/chef-run/geoshape-firewall-rules.conf
