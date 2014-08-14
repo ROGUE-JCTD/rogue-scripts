@@ -1,4 +1,12 @@
 #!/bin/bash
 
+while true; do
+    read -p "Are you sure you want to apply the firewall rules from /opt/chef-run/geoshape-firewall-rules.conf? " yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) echo "    Aborting!";exit 1;;
+        * ) echo "    Please answer yes or no.";;
+    esac
+done
 echo "Attempting to apply new rules. If you are unable to respond to the prompt, the rules will be reverted after a small timeout period."
 iptables-apply /opt/chef-run/geoshape-firewall-rules.conf
