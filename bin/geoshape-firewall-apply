@@ -1,0 +1,3 @@
+#!/bin/bash
+
+iptables-apply /opt/chef-run/geoshape-firewall-rules.conf

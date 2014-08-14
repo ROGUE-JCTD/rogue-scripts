@@ -20,8 +20,8 @@ def map_loom_django_dev():
     """
     sudo('rm -rf /var/www/rogue/maploom/*')
     sudo('ln -s /MapLoom/build/* /var/www/rogue/maploom/')
-    sudo('rm /var/lib/geonode/rogue_geonode/rogue_geonode/templates/maps/maploom.html')
-    sudo('ln -s /MapLoom/build/maploom.html /var/lib/geonode/rogue_geonode/rogue_geonode/templates/maps/maploom.html')
+    sudo('rm /var/lib/geonode/rogue_geonode/geoshape/templates/maps/maploom.html')
+    sudo('ln -s /MapLoom/build/maploom.html /var/lib/geonode/rogue_geonode/geoshape/templates/maps/maploom.html')
 
 def uninstall_django_16():
     """
