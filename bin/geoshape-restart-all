@@ -2,10 +2,10 @@
 # exit if anything returns failure
 set -e
 
-sh geoshape-postgis-restart.sh
+geoshape-postgis-restart
 sleep 5
-sh geoshape-tomcat-restart.sh
+geoshape-tomcat-restart
 sleep 5
-sh geoshape-geonode-restart.sh
+geoshape-geonode-restart
 sleep 5
-sh geoshape-nginx-restart.sh
+geoshape-nginx-restart
