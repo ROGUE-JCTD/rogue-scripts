@@ -18,7 +18,7 @@ cd /var/lib/geoserver_data
 chown tomcat7:tomcat7 -R .
 chmod 775 -R .
 cd file-service-store
-chmod 664 -R .
-    
+chmod 664 -R *.*
+
 # restore stored directory
 popd
