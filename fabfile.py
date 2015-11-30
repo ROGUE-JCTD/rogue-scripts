@@ -14,7 +14,18 @@ from subprocess import Popen, PIPE
 # http://docs.fabfile.org/en/latest/usage/fab.html#per-task-arguments
 # fab <task>:kwarg=value -H host -u <user> -p <password>
 
+
+# for example 'fab map_loom_django_dev -H 192.168.10.154 -D -u rogue -p <pass>'
 def map_loom_django_dev():
+    """
+    Creates symlinks need to develop MapLoom in our Django environment
+    """
+    sudo('rm -rf /var/www/rogue/maploom/*')
+    sudo('ln -s /MapLoom/build/* /var/www/rogue/maploom/')
+    sudo('rm /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html')
+    sudo('ln -s /MapLoom/build/maploom.html /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html')
+
+def map_loom_django_dev_old():
     """
     Creates symlinks need to develop MapLoom in our Django environment
     """
